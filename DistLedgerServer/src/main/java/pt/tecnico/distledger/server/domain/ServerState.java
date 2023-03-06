@@ -18,8 +18,7 @@ public class ServerState {
     public ServerState() {
         this.ledger = new ArrayList<>();
         this.accounts = new HashMap<String, Account>();
-
-        //TODO adicionar broker
+        Account broker = new Account("broker", 1000);
     }
 
     public void setActivated (boolean state) {
@@ -69,8 +68,4 @@ public class ServerState {
     public void desactivate () {
         setActivated(false);
     }
-
-    /* TODO: Here should be declared all the server state attributes
-         as well as the methods to access and interact with the state. */
-
 }
