@@ -39,7 +39,7 @@ public class ServerState {
 
     public void addAccount (Account account) {
         this.getAccounts().put(account.getId(),account);
-        this.addOperation(CreateOp(account.getId()))
+        this.addOperation(CreateOp(account.getId()));
     }
 
     public void addOperation (Operatio operation) {
@@ -48,13 +48,13 @@ public class ServerState {
 
     public void removeAccount (String Id) {
         this.getAccounts().remove(Id);
-        this.addOperation(DeleteOp(Id))
+        this.addOperation(DeleteOp(Id));
     }
 
     public void transferTo (Account account1, Account account2, Integer amount) {
         account1.setMoney(account1.getMoney() - amount);
         account2.setMoney(account2.getMoney() + amount);
-        addOperation(TransferOp(account1.getId, account2.getId, amount));
+        addOperation(TransferOp(account1.getId(), account2.getId89, amount));
     }
 
     public void activate () {
