@@ -3,10 +3,14 @@ package pt.tecnico.distledger.server;
 import io.grpc.BindableService;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
+import pt.tecnico.distledger.server.domain.ServerState;
+import pt.tecnico.distledger.server.domain.UserServiceImpl;
+
+import java.io.IOException;
 
 public class ServerMain {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException, InterruptedException{
 
         System.out.printf("Received %d arguments%n", args.length);
 		for (int i = 0; i < args.length; i++) {
@@ -20,9 +24,10 @@ public class ServerMain {
 		}
 
         final int port = Integer.parseInt(args[0]);
-        final BindableService impl = new ServerServiceImpl();
 
-        Server server = ServerBuilder.forPort(port).addService(impl).build();
+		final BindableService userImpl = new UserServiceImpl();
+
+        Server server = ServerBuilder.forPort(port).addService(userImpl).build();
 
         server.start();
 

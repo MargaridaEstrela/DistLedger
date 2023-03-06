@@ -1,6 +1,9 @@
 package pt.tecnico.distledger.server.domain;
 
 import pt.tecnico.distledger.server.domain.operation.Operation;
+import pt.tecnico.distledger.server.domain.operation.TransferOp;
+import pt.tecnico.distledger.server.domain.operation.DeleteOp;
+import pt.tecnico.distledger.server.domain.operation.CreateOp;
 import pt.tecnico.distledger.server.domain.account.Account;
 
 import java.util.ArrayList;
@@ -15,6 +18,8 @@ public class ServerState {
     public ServerState() {
         this.ledger = new ArrayList<>();
         this.accounts = new HashMap<String, Account>();
+
+        //TODO adicionar broker
     }
 
     public void setActivated (boolean state) {
@@ -29,7 +34,7 @@ public class ServerState {
         return this.accounts;
     }
 
-    public Account getAccount (Strring Id) {
+    public Account getAccount (String Id) {
         return this.getAccounts().get(Id);
     }
 
@@ -39,22 +44,22 @@ public class ServerState {
 
     public void addAccount (Account account) {
         this.getAccounts().put(account.getId(),account);
-        this.addOperation(CreateOp(account.getId()));
+        this.addOperation(new CreateOp(account.getId()));
     }
 
-    public void addOperation (Operatio operation) {
+    public void addOperation (Operation operation) {
         this.getLedger().add(operation);
     }
 
     public void removeAccount (String Id) {
         this.getAccounts().remove(Id);
-        this.addOperation(DeleteOp(Id));
+        this.addOperation(new DeleteOp(Id));
     }
 
     public void transferTo (Account account1, Account account2, Integer amount) {
         account1.setMoney(account1.getMoney() - amount);
         account2.setMoney(account2.getMoney() + amount);
-        addOperation(TransferOp(account1.getId(), account2.getId89, amount));
+        addOperation(new TransferOp(account1.getId(), account2.getId(), amount));
     }
 
     public void activate () {
