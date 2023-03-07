@@ -10,6 +10,10 @@ public class TransferOp extends Operation {
         this.amount = amount;
     }
 
+    public String getType () {
+        return "TRANSFER";
+    }
+
     public String getDestAccount() {
         return destAccount;
     }
