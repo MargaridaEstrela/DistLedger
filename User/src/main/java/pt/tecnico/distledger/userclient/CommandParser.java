@@ -1,6 +1,7 @@
 package pt.tecnico.distledger.userclient;
 
 import pt.tecnico.distledger.userclient.grpc.UserService;
+import pt.ulisboa.tecnico.distledger.contract.user.UserServiceGrpc;
 
 import java.util.Scanner;
 
@@ -15,6 +16,7 @@ public class CommandParser {
     private static final String EXIT = "exit";
 
     private final UserService userService;
+
 
     public CommandParser(UserService userService) {
         this.userService = userService;
@@ -74,10 +76,12 @@ public class CommandParser {
             return;
         }
 
-        String server = split[1];
+        String server = split[1]; //ignored in fase 1
         String username = split[2];
 
-        System.out.println("TODO: implement createAccount command");
+        userService.createAccount(server, username);
+
+        //System.out.println("The action completed successfully");
     }
 
     private void deleteAccount(String line){
@@ -90,7 +94,9 @@ public class CommandParser {
         String server = split[1];
         String username = split[2];
 
-        System.out.println("TODO: implement deleteAccount command");
+        userService.deleteAccount(server, username);
+
+        //System.out.println("The action completed successfully");
     }
 
 
@@ -104,7 +110,9 @@ public class CommandParser {
         String server = split[1];
         String username = split[2];
 
-        System.out.println("TODO: implement balance command");
+        userService.balance(server, username);
+
+        //System.out.println("The action completed successfully");
     }
 
     private void transferTo(String line){
@@ -119,7 +127,9 @@ public class CommandParser {
         String dest = split[3];
         Integer amount = Integer.valueOf(split[4]);
 
-        System.out.println("TODO: implement transferTo command");
+        userService.transferTo(server, from, dest, amount);
+
+        //System.out.println("The action completed successfully");
     }
 
     private void printUsage() {
