@@ -15,4 +15,7 @@ public class Operation {
         this.account = account;
     }
 
+    public String getType () {
+        return "UNSPECIFIED";
+    }
 }

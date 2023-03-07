@@ -65,7 +65,11 @@ public class ServerState {
         setActivated(true);
     }
 
-    public void desactivate () {
+    public void deactivate () {
         setActivated(false);
+    }
+
+    public String getOperationType (Operation operation) {
+        return operation.getType();
     }
 }

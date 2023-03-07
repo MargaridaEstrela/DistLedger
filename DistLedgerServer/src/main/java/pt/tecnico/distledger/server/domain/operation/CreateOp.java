@@ -5,5 +5,8 @@ public class CreateOp extends Operation {
     public CreateOp(String account) {
         super(account);
     }
-
+    
+    public String getType () {
+        return "CREATE";
+    }
 }
