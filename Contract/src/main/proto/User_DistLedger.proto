@@ -3,6 +3,13 @@ package pt.ulisboa.tecnico.distledger.contract.user;
 
 // User Interface of the DistLedger Service
 
+enum ResponseCode {
+  OK = 0;
+  NON_EXISTING_USER = 1;
+  USER_ALREADY_EXISTS = 3;
+  AMOUNT_NOT_SUPORTED = 4;
+}
+
 message BalanceRequest {
   string userId = 1;
 }
@@ -15,13 +22,17 @@ message CreateAccountRequest {
   string userId = 1;
 }
 
-message CreateAccountResponse {}
+message CreateAccountResponse {
+  ResponseCode response = 1;
+}
 
 message DeleteAccountRequest {
   string userId = 1;
 }
 
-message DeleteAccountResponse {}
+message DeleteAccountResponse {
+  ResponseCode response = 1;
+}
 
 message TransferToRequest {
   string accountFrom = 1;
@@ -29,7 +40,9 @@ message TransferToRequest {
   int32 amount = 3;
 }
 
-message TransferToResponse {}
+message TransferToResponse {
+  ResponseCode response = 1;
+}
 
 service UserService {
   rpc balance(BalanceRequest) returns (BalanceResponse);
