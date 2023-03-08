@@ -19,6 +19,8 @@ public class ServerState {
         this.ledger = new ArrayList<>();
         this.accounts = new HashMap<String, Account>();
         Account broker = new Account("broker", 1000);
+        addAccount(broker);
+        this.activated = true;
     }
 
     public void setActivated (boolean state) {
