@@ -2,7 +2,9 @@ package pt.tecnico.distledger.userclient;
 
 import pt.tecnico.distledger.userclient.grpc.UserService;
 import pt.ulisboa.tecnico.distledger.contract.user.UserServiceGrpc;
+import pt.ulisboa.tecnico.distledger.contract.user.UserDistLedger.ResponseCode;
 
+import java.util.List;
 import java.util.Scanner;
 
 public class CommandParser {
@@ -76,12 +78,12 @@ public class CommandParser {
             return;
         }
 
-        String server = split[1]; //ignored in fase 1
+        String server = split[1];
         String username = split[2];
 
-        userService.createAccount(server, username);
+        ResponseCode res_code = userService.createAccount(server, username);
 
-        //System.out.println("The action completed successfully");
+        System.out.println(formatToString(res_code));
     }
 
     private void deleteAccount(String line){
@@ -94,9 +96,9 @@ public class CommandParser {
         String server = split[1];
         String username = split[2];
 
-        userService.deleteAccount(server, username);
+        ResponseCode res_code = userService.deleteAccount(server, username);
 
-        //System.out.println("The action completed successfully");
+        System.out.println(formatToString(res_code));
     }
 
 
@@ -110,9 +112,10 @@ public class CommandParser {
         String server = split[1];
         String username = split[2];
 
-        userService.balance(server, username);
+        List<Integer> res = userService.balance(server, username);
 
-        //System.out.println("The action completed successfully");
+        System.out.println(formatToCode(res.get(0)));
+        System.out.println(res.get(1));
     }
 
     private void transferTo(String line){
@@ -127,10 +130,32 @@ public class CommandParser {
         String dest = split[3];
         Integer amount = Integer.valueOf(split[4]);
 
-        userService.transferTo(server, from, dest, amount);
+        ResponseCode res_code = userService.transferTo(server, from, dest, amount);
 
-        //System.out.println("The action completed successfully");
+        System.out.println(formatToString(res_code));
     }
+
+    public static String formatToString(ResponseCode code) {
+        switch(code) {
+            case OK : return "OK";
+            case NON_EXISTING_USER : return "NON EXISTINGUSER";
+            case USER_ALREADY_EXISTS : return "USER ALREADY EXISTS";
+            case AMOUNT_NOT_SUPORTED : return "AMOUNT NOT SUPPORTED";
+        }
+
+        return "UNKNOWN ERROR";
+    }
+
+    public static ResponseCode formatToCode(int code) {
+        switch(code) {
+            case 0 : return ResponseCode.OK;
+            case 1 : return ResponseCode.NON_EXISTING_USER;
+            case 2 : return ResponseCode.USER_ALREADY_EXISTS;
+            case 3 : return ResponseCode.AMOUNT_NOT_SUPORTED;
+        }
+
+        return ResponseCode.UNRECOGNIZED;
+    } 
 
     private void printUsage() {
         System.out.println("Usage:\n" +
