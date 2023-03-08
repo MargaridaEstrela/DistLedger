@@ -41,6 +41,8 @@ public class UserService {
             CreateAccountResponse createAccResponse = this.stub.createAccount(createAccRequest);
 
             // get response code
+            System.out.println(createAccResponse.getCode());
+            
 
         } catch (StatusRuntimeException e) {
             System.out.println("Caught exception with description: " +
@@ -58,6 +60,7 @@ public class UserService {
             DeleteAccountResponse deleteAccResponse = this.stub.deleteAccount(deleteAccRequest);
 
             // get response code
+            System.out.println(deleteAccResponse.getCode());
 
         } catch (StatusRuntimeException e) {
             System.out.println("Caught exception with description: " +
@@ -74,18 +77,17 @@ public class UserService {
             BalanceRequest balanceRequest = BalanceRequest.newBuilder().setUserId(username).build();
             BalanceResponse balanceResponse = this.stub.balance(balanceRequest);
 
-            balance = balanceResponse.getValue();
-
             // get response code
+            res_code = balanceResponse.getCode();
+            System.out.println(res_code);
 
+            if (res_code == ResponseCode.OK) {
+                System.out.println(balanceResponse.getValue());
+            }
 
         } catch (StatusRuntimeException e) {
             System.out.println("Caught exception with description: " +
             e.getStatus().getDescription()); 
-        }
-
-        if (res_code == ResponseCode.OK) {
-            System.out.println(balance);
         }
     }
 
@@ -94,8 +96,10 @@ public class UserService {
         ResponseCode res_code;
 
         try {
-            TransferToRequest transferToRequest = TransferToRequest.newBuilder().setAccountFrom(from).setAccountTo(dest).setAmount(0).build();
+            TransferToRequest transferToRequest = TransferToRequest.newBuilder().setAccountFrom(from).setAccountTo(dest).setAmount(amount).build();
             TransferToResponse transferToResponse = this.stub.transferTo(transferToRequest);
+
+            System.out.println(transferToResponse.getCode());
 
             // get response code
 

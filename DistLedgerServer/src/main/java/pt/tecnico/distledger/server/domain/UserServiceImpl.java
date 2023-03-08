@@ -9,13 +9,17 @@ import static io.grpc.Status.UNAVAILABLE;
 
 public class UserServiceImpl extends UserServiceImplBase {
 
-    private ServerState server = new ServerState();
+    private ServerState server;
+
+    public UserServiceImpl(ServerState server) {
+        this.server = server;
+    }
 
     @Override
     public void balance(BalanceRequest request, StreamObserver<BalanceResponse> responseObserver) {
 
         if(!server.getActivated()) {
-            responseObserver.onError(UNAVAILABLE.asRuntimeException());
+            responseObserver.onError(UNAVAILABLE.withDescription("Server is Unavailable").asRuntimeException());
             return;
         }
 
@@ -40,7 +44,7 @@ public class UserServiceImpl extends UserServiceImplBase {
     public void createAccount(CreateAccountRequest request, StreamObserver<CreateAccountResponse> responseObserver) {
 
         if(!server.getActivated()) {
-            responseObserver.onError(UNAVAILABLE.asRuntimeException());
+            responseObserver.onError(UNAVAILABLE.withDescription("Server is Unavailable").asRuntimeException());
             return;
         }
 
@@ -65,7 +69,7 @@ public class UserServiceImpl extends UserServiceImplBase {
     public void deleteAccount(DeleteAccountRequest request, StreamObserver<DeleteAccountResponse> responseObserver) {
 
         if(!server.getActivated()) {
-            responseObserver.onError(UNAVAILABLE.asRuntimeException());
+            responseObserver.onError(UNAVAILABLE.withDescription("Server is Unavailable").asRuntimeException());
             return;
         }
 
@@ -91,7 +95,7 @@ public class UserServiceImpl extends UserServiceImplBase {
     public void transferTo(TransferToRequest request, StreamObserver<TransferToResponse> responseObserver) {
 
         if(!server.getActivated()) {
-            responseObserver.onError(UNAVAILABLE.asRuntimeException());
+            responseObserver.onError(UNAVAILABLE.withDescription("Server is Unavailable").asRuntimeException());
             return;
         }
 

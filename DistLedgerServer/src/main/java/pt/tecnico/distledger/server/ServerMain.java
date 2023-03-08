@@ -5,6 +5,8 @@ import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import pt.tecnico.distledger.server.domain.ServerState;
 import pt.tecnico.distledger.server.domain.UserServiceImpl;
+import pt.tecnico.distledger.server.domain.AdminServiceImpl;
+
 
 import java.io.IOException;
 
@@ -25,9 +27,12 @@ public class ServerMain {
 
         final int port = Integer.parseInt(args[0]);
 
-		final BindableService userImpl = new UserServiceImpl();
+		ServerState serverState = new ServerState();
 
-        Server server = ServerBuilder.forPort(port).addService(userImpl).build();
+		final BindableService userImpl = new UserServiceImpl(serverState);
+		final BindableService adminImpl = new AdminServiceImpl(serverState);
+
+        Server server = ServerBuilder.forPort(port).addService(userImpl).addService(adminImpl).build();
 
         server.start();
 

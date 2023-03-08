@@ -10,7 +10,11 @@ import java.util.List;
 
 public class AdminServiceImpl extends AdminServiceImplBase {
 
-    private ServerState server = new ServerState();
+    private ServerState server;
+
+    public AdminServiceImpl(ServerState server) {
+        this.server = server;
+    }
 
     @Override
     public void activate(ActivateRequest request, StreamObserver<ActivateResponse> responseObserver) {
