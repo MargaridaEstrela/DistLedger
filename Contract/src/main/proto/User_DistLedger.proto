@@ -6,8 +6,8 @@ package pt.ulisboa.tecnico.distledger.contract.user;
 enum ResponseCode {
   OK = 0;
   NON_EXISTING_USER = 1;
-  USER_ALREADY_EXISTS = 3;
-  AMOUNT_NOT_SUPORTED = 4;
+  USER_ALREADY_EXISTS = 2;
+  AMOUNT_NOT_SUPORTED = 3;
 }
 
 message BalanceRequest {
