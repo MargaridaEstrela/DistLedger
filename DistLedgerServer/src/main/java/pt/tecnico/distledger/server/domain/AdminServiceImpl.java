@@ -15,12 +15,19 @@ public class AdminServiceImpl extends AdminServiceImplBase {
 
     private ServerState server;
 
-    public AdminServiceImpl(ServerState server) {
+    private boolean debugFlag;
+
+    public AdminServiceImpl(ServerState server, boolean debugFlag) {
         this.server = server;
+        this.debugFlag = debugFlag;
     }
 
     @Override
     public void activate(ActivateRequest request, StreamObserver<ActivateResponse> responseObserver) {
+
+        if(debugFlag) {
+            System.err.println("[DEBUG: activate Request started]\n");
+        }
 
         server.activate();
 
@@ -29,10 +36,18 @@ public class AdminServiceImpl extends AdminServiceImplBase {
         responseObserver.onNext(response);
             
         responseObserver.onCompleted();
+
+        if(debugFlag) {
+            System.err.println("[DEBUG: activate Request completed]\n");
+        }
     }
 
     @Override
     public void deactivate(DeactivateRequest request, StreamObserver<DeactivateResponse> responseObserver) {
+
+        if(debugFlag) {
+            System.err.println("[DEBUG: deactivate Request started]\n");
+        }
 
         server.deactivate();
 
@@ -41,10 +56,18 @@ public class AdminServiceImpl extends AdminServiceImplBase {
         responseObserver.onNext(response);
             
         responseObserver.onCompleted();
+
+        if(debugFlag) {
+            System.err.println("[DEBUG: deactivate Request completed]\n");
+        }
     }
 
     @Override
     public void gossip(GossipRequest request, StreamObserver<GossipResponse> responseObserver) {
+
+        if(debugFlag) {
+            System.err.println("[DEBUG: gossip Request started]\n");
+        }
 
         //TODO 3ª fase
 
@@ -53,10 +76,18 @@ public class AdminServiceImpl extends AdminServiceImplBase {
         responseObserver.onNext(response);
             
         responseObserver.onCompleted();
+
+        if(debugFlag) {
+            System.err.println("[DEBUG: gossip Request completed]\n");
+        }
     }
 
     @Override
     public void getLedgerState(getLedgerStateRequest request, StreamObserver<getLedgerStateResponse> responseObserver) {
+
+        if(debugFlag) {
+            System.err.println("[DEBUG: getLedgerState Request started]\n");
+        }
 
         ArrayList<pt.tecnico.distledger.server.domain.operation.Operation> operations = new ArrayList(server.getLedger());
         LedgerState.Builder ledger = LedgerState.newBuilder();
@@ -86,5 +117,9 @@ public class AdminServiceImpl extends AdminServiceImplBase {
         responseObserver.onNext(response);
             
         responseObserver.onCompleted();
+
+        if(debugFlag) {
+            System.err.println("[DEBUG: getLedgerState Request completed]\n");
+        }
     }
 }

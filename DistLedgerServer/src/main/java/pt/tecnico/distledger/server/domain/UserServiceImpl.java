@@ -11,12 +11,19 @@ public class UserServiceImpl extends UserServiceImplBase {
 
     private ServerState server;
 
-    public UserServiceImpl(ServerState server) {
+    private boolean debugFlag;
+
+    public UserServiceImpl(ServerState server, boolean debugFlag) {
         this.server = server;
+        this.debugFlag = debugFlag;
     }
 
     @Override
     public void balance(BalanceRequest request, StreamObserver<BalanceResponse> responseObserver) {
+
+        if(debugFlag) {
+            System.err.println("[DEBUG: balance Request started]\n");
+        }
 
         if(!server.getActivated()) {
             responseObserver.onError(UNAVAILABLE.withDescription("Server is Unavailable").asRuntimeException());
@@ -38,10 +45,18 @@ public class UserServiceImpl extends UserServiceImplBase {
         responseObserver.onNext(response.setCode(code).build());
             
         responseObserver.onCompleted();
+
+        if(debugFlag) {
+            System.err.println("[DEBUG: balance Request completed]\n");
+        }
     }
 
     @Override
     public void createAccount(CreateAccountRequest request, StreamObserver<CreateAccountResponse> responseObserver) {
+
+        if(debugFlag) {
+            System.err.println("[DEBUG: createAccount Request started]\n");
+        }
 
         if(!server.getActivated()) {
             responseObserver.onError(UNAVAILABLE.withDescription("Server is Unavailable").asRuntimeException());
@@ -63,10 +78,18 @@ public class UserServiceImpl extends UserServiceImplBase {
         responseObserver.onNext(response);
             
         responseObserver.onCompleted();
+
+        if(debugFlag) {
+            System.err.println("[DEBUG: createAccount Request completed]\n");
+        }
     }
 
     @Override
     public void deleteAccount(DeleteAccountRequest request, StreamObserver<DeleteAccountResponse> responseObserver) {
+
+        if(debugFlag) {
+            System.err.println("[DEBUG: deleteAccount Request started]\n");
+        }
 
         if(!server.getActivated()) {
             responseObserver.onError(UNAVAILABLE.withDescription("Server is Unavailable").asRuntimeException());
@@ -80,6 +103,9 @@ public class UserServiceImpl extends UserServiceImplBase {
         if(account == null) {
             code = NON_EXISTING_USER;
         }
+        else if(account.getMoney() > 0) {
+            code = AMOUNT_NOT_SUPORTED;
+        }
         else {
             server.removeAccount(request.getUserId());
         }
@@ -89,10 +115,18 @@ public class UserServiceImpl extends UserServiceImplBase {
         responseObserver.onNext(response);
             
         responseObserver.onCompleted();
+
+        if(debugFlag) {
+            System.err.println("[DEBUG: deleteAccount Request completed]\n");
+        }
     }
 
     @Override
     public void transferTo(TransferToRequest request, StreamObserver<TransferToResponse> responseObserver) {
+
+        if(debugFlag) {
+            System.err.println("[DEBUG: transferTo Request started]\n");
+        }
 
         if(!server.getActivated()) {
             responseObserver.onError(UNAVAILABLE.withDescription("Server is Unavailable").asRuntimeException());
@@ -122,5 +156,9 @@ public class UserServiceImpl extends UserServiceImplBase {
         responseObserver.onNext(response);
             
         responseObserver.onCompleted();
+
+        if(debugFlag) {
+            System.err.println("[DEBUG: transferTo Request completed]\n");
+        }
     }
 }

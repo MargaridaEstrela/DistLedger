@@ -14,6 +14,8 @@ public class ServerMain {
 
     public static void main(String[] args) throws IOException, InterruptedException{
 
+		boolean debugFlag = false;
+
         System.out.printf("Received %d arguments%n", args.length);
 		for (int i = 0; i < args.length; i++) {
 			System.out.printf("arg[%d] = %s%n", i, args[i]);
@@ -25,12 +27,16 @@ public class ServerMain {
 			return;
 		}
 
+		if (args[2] == "-debug") {
+			debugFlag = true;
+		}
+
         final int port = Integer.parseInt(args[0]);
 
 		ServerState serverState = new ServerState();
 
-		final BindableService userImpl = new UserServiceImpl(serverState);
-		final BindableService adminImpl = new AdminServiceImpl(serverState);
+		final BindableService userImpl = new UserServiceImpl(serverState, debugFlag);
+		final BindableService adminImpl = new AdminServiceImpl(serverState, debugFlag);
 
         Server server = ServerBuilder.forPort(port).addService(userImpl).addService(adminImpl).build();
 
