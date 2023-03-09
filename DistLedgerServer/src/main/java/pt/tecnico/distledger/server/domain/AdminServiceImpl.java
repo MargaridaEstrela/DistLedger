@@ -29,9 +29,11 @@ public class AdminServiceImpl extends AdminServiceImplBase {
             System.err.println("[DEBUG: activate Request started]\n");
         }
 
+        ResponseCode code = OK;
+
         server.activate();
 
-        ActivateResponse response = ActivateResponse.newBuilder().build();
+        ActivateResponse response = ActivateResponse.newBuilder().setCode(code).build();
 
         responseObserver.onNext(response);
             
@@ -49,9 +51,11 @@ public class AdminServiceImpl extends AdminServiceImplBase {
             System.err.println("[DEBUG: deactivate Request started]\n");
         }
 
+        ResponseCode code = OK;
+
         server.deactivate();
 
-        DeactivateResponse response = DeactivateResponse.newBuilder().build();
+        DeactivateResponse response = DeactivateResponse.newBuilder().setCode(code).build();
 
         responseObserver.onNext(response);
             
@@ -69,9 +73,11 @@ public class AdminServiceImpl extends AdminServiceImplBase {
             System.err.println("[DEBUG: gossip Request started]\n");
         }
 
+        ResponseCode code = OK;
+
         //TODO 3ª fase
 
-        GossipResponse response = GossipResponse.newBuilder().build();
+        GossipResponse response = GossipResponse.newBuilder().setCode(code).build();
 
         responseObserver.onNext(response);
             
@@ -88,6 +94,8 @@ public class AdminServiceImpl extends AdminServiceImplBase {
         if(debugFlag) {
             System.err.println("[DEBUG: getLedgerState Request started]\n");
         }
+
+        ResponseCode code = OK;
 
         ArrayList<pt.tecnico.distledger.server.domain.operation.Operation> operations = new ArrayList(server.getLedger());
         LedgerState.Builder ledger = LedgerState.newBuilder();
@@ -112,7 +120,7 @@ public class AdminServiceImpl extends AdminServiceImplBase {
             ledger.addLedger(operationContract);
         }
         
-        getLedgerStateResponse response = getLedgerStateResponse.newBuilder().setLedgerState(ledger).build();
+        getLedgerStateResponse response = getLedgerStateResponse.newBuilder().setLedgerState(ledger).setCode(code).build();
 
         responseObserver.onNext(response);
             
