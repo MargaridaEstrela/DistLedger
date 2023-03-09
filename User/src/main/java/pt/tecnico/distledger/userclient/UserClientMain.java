@@ -30,11 +30,11 @@ public class UserClientMain {
         }
 
         // check arguments
-        if (args.length != 2) {
+        if (args.length != 2 && args.length != 3) {
             System.err.println("Argument(s) missing!");
             System.err.println("Usage: mvn exec:java -Dexec.args=<host> <port>");
             return;
-        }
+        } 
 
         final String host = args[0];
         final int port = Integer.parseInt(args[1]);
