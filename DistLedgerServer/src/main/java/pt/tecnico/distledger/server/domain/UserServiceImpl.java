@@ -39,7 +39,7 @@ public class UserServiceImpl extends UserServiceImplBase {
             code = NON_EXISTING_USER;
         }
         else {
-            response.setValue(account.getMoney());
+            response.setValue(server.getMoneyAccount(request.getUserId()));
         }
 
         responseObserver.onNext(response.setCode(code).build());
@@ -65,12 +65,11 @@ public class UserServiceImpl extends UserServiceImplBase {
 
         ResponseCode code = OK;
 
-        if(server.getAccount(request.getUserId()) != null) {
+        if(server.existsAccount(request.getUserId())) {
             code = USER_ALREADY_EXISTS;
         }
         else {
-            Account account = new Account(request.getUserId(),0);
-            server.addAccount(account);
+            server.addAccount(request.getUserId());
         }
 
         CreateAccountResponse response = CreateAccountResponse.newBuilder().setCode(code).build();
@@ -98,12 +97,10 @@ public class UserServiceImpl extends UserServiceImplBase {
 
         ResponseCode code = OK;
 
-        Account account = server.getAccount(request.getUserId());
-
-        if(account == null) {
+        if(!server.existsAccount(request.getUserId())) {
             code = NON_EXISTING_USER;
         }
-        else if(account.getMoney() > 0) {
+        else if(server.hasMoney(request.getUserId(),0)) {
             code = AMOUNT_NOT_SUPORTED;
         }
         else {
@@ -135,19 +132,16 @@ public class UserServiceImpl extends UserServiceImplBase {
 
         ResponseCode code = OK;
 
-        Account account_from = server.getAccount(request.getAccountFrom());
-        Account account_to = server.getAccount(request.getAccountTo());
-
-        if(account_from == null || account_to == null) {
+        if(!server.existsAccount(request.getAccountFrom()) || !server.existsAccount(request.getAccountTo())) {
             code = NON_EXISTING_USER;
         }
         else {
-            if(account_from.getMoney() < request.getAmount()) {
+            if(server.hasMoney(request.getAccountFrom(), request.getAmount())) {
                 code = AMOUNT_NOT_SUPORTED;
             }
 
             else {
-                server.transferTo(account_from, account_to, request.getAmount());
+                server.transferTo(request.getAccountFrom(), request.getAccountTo(), request.getAmount());
             }
         }
 

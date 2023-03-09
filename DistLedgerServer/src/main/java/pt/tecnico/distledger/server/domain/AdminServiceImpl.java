@@ -5,6 +5,7 @@ import pt.ulisboa.tecnico.distledger.contract.admin.AdminServiceGrpc.AdminServic
 import pt.ulisboa.tecnico.distledger.contract.admin.AdminDistLedger.*;
 import pt.ulisboa.tecnico.distledger.contract.DistLedgerCommonDefinitions;
 import pt.ulisboa.tecnico.distledger.contract.DistLedgerCommonDefinitions.*;
+import static pt.ulisboa.tecnico.distledger.contract.admin.AdminDistLedger.ResponseCode.*;
 import pt.tecnico.distledger.server.domain.operation.*;
 
 

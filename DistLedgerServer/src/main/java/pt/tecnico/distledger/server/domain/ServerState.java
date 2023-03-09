@@ -19,7 +19,7 @@ public class ServerState {
         this.ledger = new ArrayList<>();
         this.accounts = new HashMap<String, Account>();
         Account broker = new Account("broker", 1000);
-        addAccount(broker);
+        this.accounts.put("broker",broker);
         this.activated = true;
     }
 
@@ -43,7 +43,8 @@ public class ServerState {
         return this.ledger;
     }
 
-    public void addAccount (Account account) {
+    public void addAccount (String AccountId) {
+        Account account = new Account(AccountId, 0);
         this.getAccounts().put(account.getId(),account);
         this.addOperation(new CreateOp(account.getId()));
     }
@@ -57,10 +58,24 @@ public class ServerState {
         this.addOperation(new DeleteOp(Id));
     }
 
-    public void transferTo (Account account1, Account account2, Integer amount) {
-        account1.setMoney(account1.getMoney() - amount);
-        account2.setMoney(account2.getMoney() + amount);
-        addOperation(new TransferOp(account1.getId(), account2.getId(), amount));
+    public void transferTo (String accountIdFrom, String accountIdTo, Integer amount) {
+        Account accountFrom = getAccount(accountIdFrom);
+        Account accountTo = getAccount(accountIdTo);
+        accountFrom.setMoney(accountFrom.getMoney() - amount);
+        accountTo.setMoney(accountTo.getMoney() + amount);
+        addOperation(new TransferOp(accountFrom.getId(), accountTo.getId(), amount));
+    }
+
+    public boolean existsAccount (String Id) {
+        return getAccount(Id) != null;
+    }
+
+    public Integer getMoneyAccount (String Id) {
+        return getAccount(Id).getMoney();
+    }
+
+    public boolean hasMoney (String Id, int amount) {
+        return getMoneyAccount(Id) >= amount;
     }
 
     public void activate () {
