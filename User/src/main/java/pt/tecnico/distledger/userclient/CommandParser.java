@@ -115,7 +115,11 @@ public class CommandParser {
         List<Integer> res = userService.balance(server, username);
 
         System.out.println(formatToCode(res.get(0)));
-        System.out.println(res.get(1));
+
+        int balance = res.get(1);
+        if (balance > 0 ) {
+            System.out.println(res.get(1));
+        }
     }
 
     private void transferTo(String line){
