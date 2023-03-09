@@ -118,7 +118,7 @@ public class CommandParser {
 
         System.out.println(formatToString(code));
 
-        if (code == ResponseCode.OK){ 
+        if (code == ResponseCode.OK){
             System.out.println(res.get(1));
         }
     }
@@ -143,7 +143,7 @@ public class CommandParser {
     public static String formatToString(ResponseCode code) {
         switch(code) {
             case OK : return "OK";
-            case NON_EXISTING_USER : return "NON EXISTINGUSER";
+            case NON_EXISTING_USER : return "NON EXISTING USER";
             case USER_ALREADY_EXISTS : return "USER ALREADY EXISTS";
             case AMOUNT_NOT_SUPORTED : return "AMOUNT NOT SUPPORTED";
         }
