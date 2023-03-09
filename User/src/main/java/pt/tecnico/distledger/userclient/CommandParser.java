@@ -19,7 +19,6 @@ public class CommandParser {
 
     private final UserService userService;
 
-
     public CommandParser(UserService userService) {
         this.userService = userService;
     }
@@ -81,9 +80,9 @@ public class CommandParser {
         String server = split[1];
         String username = split[2];
 
-        ResponseCode res_code = userService.createAccount(server, username);
+        ResponseCode code = this.userService.createAccount(server, username);
 
-        System.out.println(formatToString(res_code));
+        System.out.println(formatToString(code));
     }
 
     private void deleteAccount(String line){
@@ -96,9 +95,9 @@ public class CommandParser {
         String server = split[1];
         String username = split[2];
 
-        ResponseCode res_code = userService.deleteAccount(server, username);
+        ResponseCode code = this.userService.deleteAccount(server, username);
 
-        System.out.println(formatToString(res_code));
+        System.out.println(formatToString(code));
     }
 
 
@@ -112,7 +111,7 @@ public class CommandParser {
         String server = split[1];
         String username = split[2];
 
-        List<Integer> res = userService.balance(server, username);
+        List<Integer> res = this.userService.balance(server, username);
 
         ResponseCode code = formatToCode(res.get(0));
 
@@ -135,9 +134,9 @@ public class CommandParser {
         String dest = split[3];
         Integer amount = Integer.valueOf(split[4]);
 
-        ResponseCode res_code = userService.transferTo(server, from, dest, amount);
+        ResponseCode code = this.userService.transferTo(server, from, dest, amount);
 
-        System.out.println(formatToString(res_code));
+        System.out.println(formatToString(code));
     }
 
     public static String formatToString(ResponseCode code) {
