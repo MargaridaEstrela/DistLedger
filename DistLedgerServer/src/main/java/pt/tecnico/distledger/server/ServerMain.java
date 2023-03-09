@@ -27,8 +27,10 @@ public class ServerMain {
 			return;
 		}
 
-		if (args[2] == "-debug") {
-			debugFlag = true;
+		if(args.length >= 3) {
+			if (args[2] == "-debug") {
+				debugFlag = true;
+			}
 		}
 
         final int port = Integer.parseInt(args[0]);
