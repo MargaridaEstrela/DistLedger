@@ -114,10 +114,11 @@ public class CommandParser {
 
         List<Integer> res = userService.balance(server, username);
 
-        System.out.println(formatToCode(res.get(0)));
+        ResponseCode code = formatToCode(res.get(0));
 
-        int balance = res.get(1);
-        if (balance > 0 ) {
+        System.out.println(formatToString(code));
+
+        if (code == ResponseCode.OK){ 
             System.out.println(res.get(1));
         }
     }
