@@ -1,6 +1,7 @@
 package pt.tecnico.distledger.adminclient;
 
 import pt.tecnico.distledger.adminclient.grpc.AdminService;
+import pt.ulisboa.tecnico.distledger.contract.admin.AdminDistLedger.ResponseCode;
 
 import java.util.Scanner;
 
@@ -15,6 +16,7 @@ public class CommandParser {
     private static final String EXIT = "exit";
 
     private final AdminService adminService;
+
     public CommandParser(AdminService adminService) {
         this.adminService = adminService;
     }
@@ -69,7 +71,8 @@ public class CommandParser {
         }
         String server = split[1];
 
-        System.out.println("TODO: implement activate command");
+        ResponseCode code = this.adminService.activate(server);
+        System.out.println(formatToString(code));
     }
 
     private void deactivate(String line){
@@ -81,7 +84,10 @@ public class CommandParser {
         }
         String server = split[1];
 
-        System.out.println("TODO: implement deactivate command");
+
+
+        ResponseCode code = this.adminService.deactivate(server);
+        System.out.println(formatToString(code));
     }
 
     private void dump(String line){
@@ -92,8 +98,17 @@ public class CommandParser {
             return;
         }
         String server = split[1];
+        this.adminService.dump(server);
 
-        System.out.println("TODO: implement getLedgerState command");
+        //System.out.println("TODO: implement getLedgerState command");
+    }
+
+    public static String formatToString(ResponseCode code) {
+        switch(code) {
+            case OK : return "OK";
+        }
+
+        return "UNKNOWN ERROR";
     }
 
     @SuppressWarnings("unused")
