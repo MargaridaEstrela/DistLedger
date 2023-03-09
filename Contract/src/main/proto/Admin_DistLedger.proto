@@ -5,22 +5,33 @@ import "DistLedgerCommonDefinitions.proto";
 
 // Administrator Interface of the DistLedger Service
 
+enum ResponseCode {
+  OK = 0;
+}
+
 message ActivateRequest {}
 
-message ActivateResponse {}
+message ActivateResponse {
+  ResponseCode code = 1;
+}
 
 message DeactivateRequest {}
 
-message DeactivateResponse {}
+message DeactivateResponse {
+  ResponseCode code = 1;
+}
 
 message GossipRequest {}
 
-message GossipResponse {}
+message GossipResponse {
+  ResponseCode code = 1;
+}
 
 message getLedgerStateRequest {}
 
 message getLedgerStateResponse {
   LedgerState ledgerState = 1;
+  ResponseCode code = 2;
 }
 
 service AdminService {
