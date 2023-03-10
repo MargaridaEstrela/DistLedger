@@ -111,9 +111,9 @@ public class UserService {
             System.out.println("Caught exception with description: " +
                     e.getStatus().getDescription());
         }
-
-        res.add(ResponseCode.UNRECOGNIZED.getNumber());
-        res.add(balance);
+        
+        // Add UNRECOGNIZED code value to list
+        res.add(-1);
 
         return res;
     }

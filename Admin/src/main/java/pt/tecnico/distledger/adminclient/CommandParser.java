@@ -108,7 +108,7 @@ public class CommandParser {
             case OK : return "OK";
         }
 
-        return "UNKNOWN ERROR";
+        return "UNAVAILABLE SERVER";
     }
 
     @SuppressWarnings("unused")

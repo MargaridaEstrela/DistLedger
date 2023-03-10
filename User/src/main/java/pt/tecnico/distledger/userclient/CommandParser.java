@@ -7,6 +7,8 @@ import pt.ulisboa.tecnico.distledger.contract.user.UserDistLedger.ResponseCode;
 import java.util.List;
 import java.util.Scanner;
 
+import com.google.protobuf.NullValue;
+
 public class CommandParser {
 
     private static final String SPACE = " ";
@@ -147,7 +149,7 @@ public class CommandParser {
             case AMOUNT_NOT_SUPORTED : return "AMOUNT NOT SUPPORTED";
         }
 
-        return "UNKNOWN ERROR";
+        return "UNAVAILABLE SERVER";
     }
 
     public static ResponseCode formatToCode(int code) {
