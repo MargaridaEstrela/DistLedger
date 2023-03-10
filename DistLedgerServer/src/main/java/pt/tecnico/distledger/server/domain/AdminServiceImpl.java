@@ -102,6 +102,7 @@ public class AdminServiceImpl extends AdminServiceImplBase {
         LedgerState.Builder ledger = LedgerState.newBuilder();
         for (pt.tecnico.distledger.server.domain.operation.Operation operation : operations) {
             pt.ulisboa.tecnico.distledger.contract.DistLedgerCommonDefinitions.Operation.Builder operationContract = DistLedgerCommonDefinitions.Operation.newBuilder();
+
             if(operation.getType() == "CREATE") {
                 operationContract.setType(OperationType.OP_CREATE_ACCOUNT);
             }
@@ -118,10 +119,10 @@ public class AdminServiceImpl extends AdminServiceImplBase {
                 operationContract.setType(OperationType.OP_UNSPECIFIED);
             }
             operationContract.setUserId(operation.getAccount());
-            ledger.addLedger(operationContract);
+            ledger.addLedger(operationContract.build());
         }
         
-        getLedgerStateResponse response = getLedgerStateResponse.newBuilder().setLedgerState(ledger).setCode(code).build();
+        getLedgerStateResponse response = getLedgerStateResponse.newBuilder().setLedgerState(ledger.build()).setCode(code).build();
 
         responseObserver.onNext(response);
             

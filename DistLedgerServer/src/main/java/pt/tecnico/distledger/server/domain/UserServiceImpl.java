@@ -62,11 +62,13 @@ public class UserServiceImpl extends UserServiceImplBase {
 
         ResponseCode code = OK;
 
-        if(server.existsAccount(request.getUserId())) {
-            code = USER_ALREADY_EXISTS;
-        }
-        else {
-            server.addAccount(request.getUserId());
+        synchronized(request.getUserId().intern()) {
+            if(server.existsAccount(request.getUserId())) {
+                code = USER_ALREADY_EXISTS;
+            }
+            else {
+                server.addAccount(request.getUserId());
+            }
         }
 
         CreateAccountResponse response = CreateAccountResponse.newBuilder().setCode(code).build();
@@ -94,14 +96,16 @@ public class UserServiceImpl extends UserServiceImplBase {
 
         ResponseCode code = OK;
 
-        if(!server.existsAccount(request.getUserId())) {
-            code = NON_EXISTING_USER;
-        }
-        else if(server.hasMoney(request.getUserId())) {
-            code = AMOUNT_NOT_SUPORTED;
-        }
-        else {
-            server.removeAccount(request.getUserId());
+        synchronized(request.getUserId().intern()) {
+            if(!server.existsAccount(request.getUserId())) {
+                code = NON_EXISTING_USER;
+            }
+            else if(server.hasMoney(request.getUserId())) {
+                code = AMOUNT_NOT_SUPORTED;
+            }
+            else {
+                server.removeAccount(request.getUserId());
+            }
         }
 
         DeleteAccountResponse response = DeleteAccountResponse.newBuilder().setCode(code).build();
@@ -129,16 +133,18 @@ public class UserServiceImpl extends UserServiceImplBase {
 
         ResponseCode code = OK;
 
-        if(!server.existsAccount(request.getAccountFrom()) || !server.existsAccount(request.getAccountTo())) {
-            code = NON_EXISTING_USER;
-        }
         else {
-            if(server.hasMoney(request.getAccountFrom(), request.getAmount())) {
-                code = AMOUNT_NOT_SUPORTED;
-            }
-
-            else {
-                server.transferTo(request.getAccountFrom(), request.getAccountTo(), request.getAmount());
+        synchronized(request.getAccountTo().intern()){
+            synchronized(request.getAccountFrom().intern()){
+                if(!server.existsAccount(request.getAccountFrom()) || !server.existsAccount(request.getAccountTo())) {
+                     code = NON_EXISTING_USER;
+                }
+                else if(!server.hasMoney(request.getAccountFrom(), request.getAmount())) {
+                    code = AMOUNT_NOT_SUPORTED;
+                }
+                else {
+                    server.transferTo(request.getAccountFrom(), request.getAccountTo(), request.getAmount());
+                }
             }
         }
 
