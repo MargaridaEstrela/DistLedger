@@ -78,6 +78,10 @@ public class ServerState {
         return getMoneyAccount(Id) >= amount;
     }
 
+    public boolean hasMoney (String Id) {
+        return getMoneyAccount(Id) > 0;
+    }
+
     public void activate () {
         setActivated(true);
     }
