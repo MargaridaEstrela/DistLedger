@@ -90,8 +90,6 @@ public class CommandParser {
         }
         String server = split[1];
 
-
-
         ResponseCode code = this.adminService.deactivate(server);
         System.out.println(formatToString(code));
     }
@@ -107,7 +105,7 @@ public class CommandParser {
         String server = split[1];
         this.adminService.dump(server);
 
-        //System.out.println("TODO: implement getLedgerState command");
+        // Print being done in the AdminService
     }
 
     // To convert the ResponseCode to a string
