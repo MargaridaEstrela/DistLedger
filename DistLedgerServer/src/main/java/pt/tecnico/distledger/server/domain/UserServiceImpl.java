@@ -133,7 +133,6 @@ public class UserServiceImpl extends UserServiceImplBase {
 
         ResponseCode code = OK;
 
-        else {
         synchronized(request.getAccountTo().intern()){
             synchronized(request.getAccountFrom().intern()){
                 if(!server.existsAccount(request.getAccountFrom()) || !server.existsAccount(request.getAccountTo())) {

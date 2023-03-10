@@ -45,8 +45,8 @@ public class ServerState {
 
     public void addAccount (String AccountId) {
         Account account = new Account(AccountId, 0);
-        this.getAccounts().put(account.getId(),account);
-        this.addOperation(new CreateOp(account.getId()));
+            this.getAccounts().put(account.getId(),account);
+            this.addOperation(new CreateOp(account.getId()));
     }
 
     public void addOperation (Operation operation) {
