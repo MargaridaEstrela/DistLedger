@@ -4,7 +4,6 @@ import io.grpc.stub.StreamObserver;
 import pt.ulisboa.tecnico.distledger.contract.user.UserServiceGrpc.UserServiceImplBase;
 import pt.ulisboa.tecnico.distledger.contract.user.UserDistLedger.*;
 import static pt.ulisboa.tecnico.distledger.contract.user.UserDistLedger.ResponseCode.*;
-import pt.tecnico.distledger.server.domain.account.Account;
 import static io.grpc.Status.UNAVAILABLE;
 
 public class UserServiceImpl extends UserServiceImplBase {
@@ -33,9 +32,7 @@ public class UserServiceImpl extends UserServiceImplBase {
         ResponseCode code = OK;
         BalanceResponse.Builder response = BalanceResponse.newBuilder();
 
-        Account account = server.getAccount(request.getUserId());
-
-        if(account == null) {
+        if(!server.existsAccount(request.getUserId())) {
             code = NON_EXISTING_USER;
         }
         else {
@@ -100,7 +97,7 @@ public class UserServiceImpl extends UserServiceImplBase {
         if(!server.existsAccount(request.getUserId())) {
             code = NON_EXISTING_USER;
         }
-        else if(server.hasMoney(request.getUserId(),0)) {
+        else if(server.hasMoney(request.getUserId())) {
             code = AMOUNT_NOT_SUPORTED;
         }
         else {
