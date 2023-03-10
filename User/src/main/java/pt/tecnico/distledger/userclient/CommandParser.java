@@ -1,16 +1,14 @@
 package pt.tecnico.distledger.userclient;
 
 import pt.tecnico.distledger.userclient.grpc.UserService;
-import pt.ulisboa.tecnico.distledger.contract.user.UserServiceGrpc;
 import pt.ulisboa.tecnico.distledger.contract.user.UserDistLedger.ResponseCode;
 
 import java.util.List;
 import java.util.Scanner;
 
-import com.google.protobuf.NullValue;
-
 public class CommandParser {
 
+    // private variables
     private static final String SPACE = " ";
     private static final String CREATE_ACCOUNT = "createAccount";
     private static final String DELETE_ACCOUNT = "deleteAccount";
@@ -21,10 +19,12 @@ public class CommandParser {
 
     private final UserService userService;
 
+    // Constructor
     public CommandParser(UserService userService) {
         this.userService = userService;
     }
 
+    // To parse the command line
     void parseInput() {
 
         Scanner scanner = new Scanner(System.in);
@@ -71,6 +71,7 @@ public class CommandParser {
         }
     }
 
+    // To print the create account command usage
     private void createAccount(String line){
         String[] split = line.split(SPACE);
 
@@ -87,6 +88,7 @@ public class CommandParser {
         System.out.println(formatToString(code));
     }
 
+    // To print the delete account command usage
     private void deleteAccount(String line){
         String[] split = line.split(SPACE);
 
@@ -102,7 +104,7 @@ public class CommandParser {
         System.out.println(formatToString(code));
     }
 
-
+    // To print the get account balance command usage
     private void balance(String line){
         String[] split = line.split(SPACE);
 
@@ -115,15 +117,18 @@ public class CommandParser {
 
         List<Integer> res = this.userService.balance(server, username);
 
+        // First element is the integer code of a ResponseCode object
         ResponseCode code = formatToCode(res.get(0));
 
         System.out.println(formatToString(code));
 
+        // Only print the second element (balance) in case of ResponseCode == OK
         if (code == ResponseCode.OK){
             System.out.println(res.get(1));
         }
     }
 
+    // To print the transfer to command usage
     private void transferTo(String line){
         String[] split = line.split(SPACE);
 
@@ -131,6 +136,7 @@ public class CommandParser {
             this.printUsage();
             return;
         }
+        
         String server = split[1];
         String from = split[2];
         String dest = split[3];
@@ -141,6 +147,7 @@ public class CommandParser {
         System.out.println(formatToString(code));
     }
 
+    // To convert the ResponseCode objetc to a String
     public static String formatToString(ResponseCode code) {
         switch(code) {
             case OK : return "OK";
@@ -152,6 +159,7 @@ public class CommandParser {
         return "UNAVAILABLE SERVER";
     }
 
+    // To convert an integer to a ResponseCode object
     public static ResponseCode formatToCode(int code) {
         switch(code) {
             case 0 : return ResponseCode.OK;
@@ -163,6 +171,7 @@ public class CommandParser {
         return ResponseCode.UNRECOGNIZED;
     } 
 
+    // To print the help command usage
     private void printUsage() {
         System.out.println("Usage:\n" +
                         "- createAccount <server> <username>\n" +

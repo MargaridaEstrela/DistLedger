@@ -14,46 +14,46 @@ import pt.ulisboa.tecnico.distledger.contract.admin.AdminDistLedger.getLedgerSta
 
 public class AdminService {
 
-    /* TODO: The gRPC client-side logic should be here.
-        This should include a method that builds a channel and stub,
-        as well as individual methods for each remote operation of this service. */
-
+    // Private variables
     private AdminServiceGrpc.AdminServiceBlockingStub stub;
     private ResponseCode code;
 
+    // Constructor
     public AdminService(AdminServiceGrpc.AdminServiceBlockingStub stub) {
         this.stub = stub;
         this.code = ResponseCode.UNRECOGNIZED;
     }
 
+    // Get the ResponseCode of a response.
     public ResponseCode getCode() {
         return code;
     }
 
-    public void set_code(ResponseCode code) {
-        this.code = code;
-    }
-
+    // Activate the AdminClient. Returns a ResponseCode.
     public ResponseCode activate(String server){
         try {
             ActivateRequest activateRequest = ActivateRequest.newBuilder().build();
             ActivateResponse activateResponse = this.stub.activate(activateRequest);
 
             ResponseCode code = activateResponse.getCode();
-
+            
+            // Debug message
             if (code == ResponseCode.OK) {
                 AdminClientMain.debug("Admin activated successfully");
             }
             return code;
+
         } catch (StatusRuntimeException e) {
             System.out.println("Caught exception with description: " +
                     e.getStatus().getDescription());
         }
 
+        // Return an error code
         return ResponseCode.UNRECOGNIZED;
 
     }
 
+    // Deactivate the AdminClient. Returns a ResponseCode.
     public ResponseCode deactivate(String server){
         try {
             DeactivateRequest deactivateRequest = DeactivateRequest.newBuilder().build();
@@ -61,15 +61,19 @@ public class AdminService {
 
             ResponseCode code = deactivateResponse.getCode();
 
+            // Debug message
             if (code == ResponseCode.OK) {
                 AdminClientMain.debug("Admin deactivated successfully");
             }
+
             return code;
+
         } catch (StatusRuntimeException e) {
             System.out.println("Caught exception with description: " +
                     e.getStatus().getDescription());
         }
-
+        
+        // Return an error code
         return ResponseCode.UNRECOGNIZED;
     }
 
@@ -81,11 +85,13 @@ public class AdminService {
             ResponseCode code = response.getCode();
             LedgerState ledgerState = response.getLedgerState();
 
+            // Debug message
             if (code == ResponseCode.OK) {
                 AdminClientMain.debug("Dumped everything successfully");
                 System.out.println("OK");
                 System.out.println(ledgerState.toString());
             }    
+
         } catch (StatusRuntimeException e) {
             System.out.println("Caught exception with description: " +
                     e.getStatus().getDescription());

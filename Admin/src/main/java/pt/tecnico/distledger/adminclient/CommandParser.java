@@ -7,6 +7,7 @@ import java.util.Scanner;
 
 public class CommandParser {
 
+    // Private variables
     private static final String SPACE = " ";
     private static final String ACTIVATE = "activate";
     private static final String DEACTIVATE = "deactivate";
@@ -17,9 +18,12 @@ public class CommandParser {
 
     private final AdminService adminService;
 
+    // Constructor
     public CommandParser(AdminService adminService) {
         this.adminService = adminService;
     }
+
+    // To parse the command line
     void parseInput() {
 
         Scanner scanner = new Scanner(System.in);
@@ -62,6 +66,7 @@ public class CommandParser {
         }
     }
 
+    // To print the activate command usage
     private void activate(String line){
         String[] split = line.split(SPACE);
 
@@ -75,6 +80,7 @@ public class CommandParser {
         System.out.println(formatToString(code));
     }
 
+    // To print the deactivate command usage
     private void deactivate(String line){
         String[] split = line.split(SPACE);
 
@@ -90,6 +96,7 @@ public class CommandParser {
         System.out.println(formatToString(code));
     }
 
+    // To print the getLedgerState command usage
     private void dump(String line){
         String[] split = line.split(SPACE);
 
@@ -103,6 +110,7 @@ public class CommandParser {
         //System.out.println("TODO: implement getLedgerState command");
     }
 
+    // To convert the ResponseCode to a string
     public static String formatToString(ResponseCode code) {
         switch(code) {
             case OK : return "OK";
@@ -116,6 +124,8 @@ public class CommandParser {
         /* TODO Phase-3 */
         System.out.println("TODO: implement gossip command (only for Phase-3)");
     }
+
+    // To print the help command
     private void printUsage() {
         System.out.println("Usage:\n" +
                 "- activate <server>\n" +
