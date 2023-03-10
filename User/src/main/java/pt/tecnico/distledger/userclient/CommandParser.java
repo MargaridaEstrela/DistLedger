@@ -124,7 +124,9 @@ public class CommandParser {
 
         // Only print the second element (balance) in case of ResponseCode == OK
         if (code == ResponseCode.OK){
-            System.out.println(res.get(1));
+            if(res.get(1) > 0){
+                System.out.println(res.get(1));
+            }
         }
     }
 
