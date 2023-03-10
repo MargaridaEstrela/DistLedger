@@ -20,7 +20,7 @@ public class UserServiceImpl extends UserServiceImplBase {
     }
 
     //debug
-    public static void debug(String debugMessage) {
+    public void debug(String debugMessage) {
         if (debugFlag) {
             System.err.println("DEBUG: " + debugMessage);
         }
@@ -30,7 +30,7 @@ public class UserServiceImpl extends UserServiceImplBase {
     public void balance(BalanceRequest request, StreamObserver<BalanceResponse> responseObserver) {
 
         if(debugFlag) {
-            debu("balance Request started\n");
+            debug("balance Request started\n");
         }
 
         if(!server.getActivated()) {
@@ -54,7 +54,7 @@ public class UserServiceImpl extends UserServiceImplBase {
         responseObserver.onCompleted();
 
         if(debugFlag) {
-            debu("balance Request completed\n");
+            debug("balance Request completed\n");
         }
     }
 
@@ -62,7 +62,7 @@ public class UserServiceImpl extends UserServiceImplBase {
     public void createAccount(CreateAccountRequest request, StreamObserver<CreateAccountResponse> responseObserver) {
 
         if(debugFlag) {
-            debu("createAccount Request started\n");
+            debug("createAccount Request started\n");
         }
 
         if(!server.getActivated()) {
@@ -88,7 +88,7 @@ public class UserServiceImpl extends UserServiceImplBase {
         responseObserver.onCompleted();
 
         if(debugFlag) {
-            debu("createAccount Request completed\n");
+            debug("createAccount Request completed\n");
         }
     }
 
@@ -96,7 +96,7 @@ public class UserServiceImpl extends UserServiceImplBase {
     public void deleteAccount(DeleteAccountRequest request, StreamObserver<DeleteAccountResponse> responseObserver) {
 
         if(debugFlag) {
-            debu("deleteAccount Request started\n");
+            debug("deleteAccount Request started\n");
         }
 
         if(!server.getActivated()) {
@@ -137,7 +137,7 @@ public class UserServiceImpl extends UserServiceImplBase {
         responseObserver.onCompleted();
 
         if(debugFlag) {
-            debu("deleteAccount Request completed\n");
+            debug("deleteAccount Request completed\n");
         }
     }
 
@@ -145,7 +145,7 @@ public class UserServiceImpl extends UserServiceImplBase {
     public void transferTo(TransferToRequest request, StreamObserver<TransferToResponse> responseObserver) {
 
         if(debugFlag) {
-            debu("transferTo Request started\n");
+            debug("transferTo Request started\n");
         }
 
         if(!server.getActivated()) {
@@ -187,7 +187,7 @@ public class UserServiceImpl extends UserServiceImplBase {
         responseObserver.onCompleted();
 
         if(debugFlag) {
-            debu("transferTo Request completed\n");
+            debug("transferTo Request completed\n");
         }
     }
 }

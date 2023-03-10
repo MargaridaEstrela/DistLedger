@@ -25,7 +25,7 @@ public class AdminServiceImpl extends AdminServiceImplBase {
     }
 
     //debug
-    public static void debug(String debugMessage) {
+    public void debug(String debugMessage) {
         if (debugFlag) {
             System.err.println("DEBUG: " + debugMessage);
         }
