@@ -44,6 +44,9 @@ public class AdminService {
             return code;
 
         } catch (StatusRuntimeException e) {
+            // Debug message
+            AdminClientMain.debug("Server " + server + " is unreachable");
+
             System.out.println("Caught exception with description: " +
                     e.getStatus().getDescription());
         }
@@ -69,6 +72,9 @@ public class AdminService {
             return code;
 
         } catch (StatusRuntimeException e) {
+            // Debug message
+            AdminClientMain.debug("Server " + server + " is unreachable");
+
             System.out.println("Caught exception with description: " +
                     e.getStatus().getDescription());
         }
@@ -93,6 +99,9 @@ public class AdminService {
             }    
 
         } catch (StatusRuntimeException e) {
+            // Debug message
+            AdminClientMain.debug("Server " + server + " is unreachable");
+
             System.out.println("Caught exception with description: " +
                     e.getStatus().getDescription());
         }

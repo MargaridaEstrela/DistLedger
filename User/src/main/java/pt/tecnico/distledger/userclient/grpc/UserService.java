@@ -52,7 +52,10 @@ public class UserService {
 
             return code;
 
-        } catch (StatusRuntimeException e) {
+        } catch (StatusRuntimeException e) {  
+            // Debug message
+            UserClientMain.debug("Server " + server + " is unreachable");
+            
             System.out.println("Caught exception with description: " +
                     e.getStatus().getDescription());
         }
@@ -81,6 +84,9 @@ public class UserService {
             return code;
 
         } catch (StatusRuntimeException e) {
+            // Debug message
+            UserClientMain.debug("Server " + server + " is unreachable");
+
             System.out.println("Caught exception with description: " +
                     e.getStatus().getDescription());
         }
@@ -116,6 +122,9 @@ public class UserService {
             return res;
 
         } catch (StatusRuntimeException e) {
+            // Debug message
+            UserClientMain.debug("Server " + server + " is unreachable");
+
             System.out.println("Caught exception with description: " +
                     e.getStatus().getDescription());
         }
@@ -150,6 +159,9 @@ public class UserService {
             return code;
 
         } catch (StatusRuntimeException e) {
+            // Debug message
+            UserClientMain.debug("Server " + server + " is unreachable");
+
             System.out.println("Caught exception with description: " +
                     e.getStatus().getDescription());
         }
