@@ -14,24 +14,33 @@ import java.util.List;
 
 public class AdminServiceImpl extends AdminServiceImplBase {
 
+    //Private variables
     private ServerState server;
-
     private boolean debugFlag;
 
+    //Constructor
     public AdminServiceImpl(ServerState server, boolean debugFlag) {
         this.server = server;
         this.debugFlag = debugFlag;
+    }
+
+    //debug
+    public static void debug(String debugMessage) {
+        if (debugFlag) {
+            System.err.println("DEBUG: " + debugMessage);
+        }
     }
 
     @Override
     public void activate(ActivateRequest request, StreamObserver<ActivateResponse> responseObserver) {
 
         if(debugFlag) {
-            System.err.println("[DEBUG: activate Request started]\n");
+            debug("activate Request started\n");
         }
 
         ResponseCode code = OK;
 
+        //call the activate function
         server.activate();
 
         ActivateResponse response = ActivateResponse.newBuilder().setCode(code).build();
@@ -41,7 +50,7 @@ public class AdminServiceImpl extends AdminServiceImplBase {
         responseObserver.onCompleted();
 
         if(debugFlag) {
-            System.err.println("[DEBUG: activate Request completed]\n");
+            debug("activate Request completed\n");
         }
     }
 
@@ -49,11 +58,12 @@ public class AdminServiceImpl extends AdminServiceImplBase {
     public void deactivate(DeactivateRequest request, StreamObserver<DeactivateResponse> responseObserver) {
 
         if(debugFlag) {
-            System.err.println("[DEBUG: deactivate Request started]\n");
+            debug("deactivate Request started\n");
         }
 
         ResponseCode code = OK;
 
+        //call the deactivate function
         server.deactivate();
 
         DeactivateResponse response = DeactivateResponse.newBuilder().setCode(code).build();
@@ -63,7 +73,7 @@ public class AdminServiceImpl extends AdminServiceImplBase {
         responseObserver.onCompleted();
 
         if(debugFlag) {
-            System.err.println("[DEBUG: deactivate Request completed]\n");
+            debug("deactivate Request completed\n");
         }
     }
 
@@ -71,7 +81,7 @@ public class AdminServiceImpl extends AdminServiceImplBase {
     public void gossip(GossipRequest request, StreamObserver<GossipResponse> responseObserver) {
 
         if(debugFlag) {
-            System.err.println("[DEBUG: gossip Request started]\n");
+            debug("gossip Request started\n");
         }
 
         ResponseCode code = OK;
@@ -85,7 +95,7 @@ public class AdminServiceImpl extends AdminServiceImplBase {
         responseObserver.onCompleted();
 
         if(debugFlag) {
-            System.err.println("[DEBUG: gossip Request completed]\n");
+            debug("gossip Request completed\n");
         }
     }
 
@@ -93,16 +103,20 @@ public class AdminServiceImpl extends AdminServiceImplBase {
     public void getLedgerState(getLedgerStateRequest request, StreamObserver<getLedgerStateResponse> responseObserver) {
 
         if(debugFlag) {
-            System.err.println("[DEBUG: getLedgerState Request started]\n");
+            debug("getLedgerState Request started\n");
         }
 
         ResponseCode code = OK;
 
+        //ArrayList of operations from the server ledger
         ArrayList<pt.tecnico.distledger.server.domain.operation.Operation> operations = new ArrayList(server.getLedger());
+
         LedgerState.Builder ledger = LedgerState.newBuilder();
+
         for (pt.tecnico.distledger.server.domain.operation.Operation operation : operations) {
             pt.ulisboa.tecnico.distledger.contract.DistLedgerCommonDefinitions.Operation.Builder operationContract = DistLedgerCommonDefinitions.Operation.newBuilder();
 
+            //Check the type of Operation
             if(operation.getType() == "CREATE") {
                 operationContract.setType(OperationType.OP_CREATE_ACCOUNT);
             }
@@ -129,7 +143,7 @@ public class AdminServiceImpl extends AdminServiceImplBase {
         responseObserver.onCompleted();
 
         if(debugFlag) {
-            System.err.println("[DEBUG: getLedgerState Request completed]\n");
+            debug("getLedgerState Request completed\n");
         }
     }
 }

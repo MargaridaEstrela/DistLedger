@@ -53,5 +53,7 @@ public class AdminClientMain {
         CommandParser parser = new CommandParser(new AdminService(stub));
         parser.parseInput();
 
+        // Close the channel
+        channel.shutdownNow();
     }
 }

@@ -53,5 +53,7 @@ public class UserClientMain {
         CommandParser parser = new CommandParser(new UserService(stub));
         parser.parseInput();
 
+        // Close the channel
+        channel.shutdownNow();
     }
 }

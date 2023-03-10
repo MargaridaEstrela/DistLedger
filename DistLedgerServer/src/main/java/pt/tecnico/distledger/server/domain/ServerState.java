@@ -11,22 +11,29 @@ import java.util.List;
 import java.util.HashMap;
 
 public class ServerState {
+
+    //Private variables
     private List<Operation> ledger;
     private HashMap<String, Account> accounts;
     private boolean activated;
 
+    //Constructor
     public ServerState() {
         this.ledger = new ArrayList<>();
         this.accounts = new HashMap<String, Account>();
+        this.activated = true;
+
+        //creation of the Broker Account
         Account broker = new Account("broker", 1000);
         this.accounts.put("broker",broker);
-        this.activated = true;
     }
 
+    //Setters:
     public void setActivated (boolean state) {
         this.activated = state;
     }
 
+    //Getters:
     public boolean getActivated () {
         return this.activated;
     }
@@ -43,21 +50,31 @@ public class ServerState {
         return this.ledger;
     }
 
-    public void addAccount (String AccountId) {
-        Account account = new Account(AccountId, 0);
-            this.getAccounts().put(account.getId(),account);
-            this.addOperation(new CreateOp(account.getId()));
+    public Integer getMoneyAccount (String Id) {
+        return getAccount(Id).getMoney();
     }
 
+    //Create a new account and add it to the Server
+    public void addAccount (String AccountId) {
+        Account account = new Account(AccountId, 0);
+        synchronized(account) {
+            this.getAccounts().put(account.getId(),account);
+            this.addOperation(new CreateOp(account.getId()));
+        }
+    }
+
+    //Add an Operation to the ledger
     public void addOperation (Operation operation) {
         this.getLedger().add(operation);
     }
 
+    //Remove an account from the Server
     public void removeAccount (String Id) {
         this.getAccounts().remove(Id);
         this.addOperation(new DeleteOp(Id));
     }
 
+    //Transfer command
     public void transferTo (String accountIdFrom, String accountIdTo, Integer amount) {
         Account accountFrom = getAccount(accountIdFrom);
         Account accountTo = getAccount(accountIdTo);
@@ -68,10 +85,6 @@ public class ServerState {
 
     public boolean existsAccount (String Id) {
         return getAccount(Id) != null;
-    }
-
-    public Integer getMoneyAccount (String Id) {
-        return getAccount(Id).getMoney();
     }
 
     public boolean hasMoney (String Id, int amount) {

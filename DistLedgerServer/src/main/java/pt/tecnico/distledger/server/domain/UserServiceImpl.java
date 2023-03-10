@@ -3,25 +3,34 @@ package pt.tecnico.distledger.server.domain;
 import io.grpc.stub.StreamObserver;
 import pt.ulisboa.tecnico.distledger.contract.user.UserServiceGrpc.UserServiceImplBase;
 import pt.ulisboa.tecnico.distledger.contract.user.UserDistLedger.*;
+import pt.tecnico.distledger.server.domain.account.Account;
 import static pt.ulisboa.tecnico.distledger.contract.user.UserDistLedger.ResponseCode.*;
 import static io.grpc.Status.UNAVAILABLE;
 
 public class UserServiceImpl extends UserServiceImplBase {
 
+    //Private variables
     private ServerState server;
-
     private boolean debugFlag;
 
+    //Constructor
     public UserServiceImpl(ServerState server, boolean debugFlag) {
         this.server = server;
         this.debugFlag = debugFlag;
+    }
+
+    //debug
+    public static void debug(String debugMessage) {
+        if (debugFlag) {
+            System.err.println("DEBUG: " + debugMessage);
+        }
     }
 
     @Override
     public void balance(BalanceRequest request, StreamObserver<BalanceResponse> responseObserver) {
 
         if(debugFlag) {
-            System.err.println("[DEBUG: balance Request started]\n");
+            debu("balance Request started\n");
         }
 
         if(!server.getActivated()) {
@@ -32,6 +41,7 @@ public class UserServiceImpl extends UserServiceImplBase {
         ResponseCode code = OK;
         BalanceResponse.Builder response = BalanceResponse.newBuilder();
 
+        //Check existance of account
         if(!server.existsAccount(request.getUserId())) {
             code = NON_EXISTING_USER;
         }
@@ -44,7 +54,7 @@ public class UserServiceImpl extends UserServiceImplBase {
         responseObserver.onCompleted();
 
         if(debugFlag) {
-            System.err.println("[DEBUG: balance Request completed]\n");
+            debu("balance Request completed\n");
         }
     }
 
@@ -52,7 +62,7 @@ public class UserServiceImpl extends UserServiceImplBase {
     public void createAccount(CreateAccountRequest request, StreamObserver<CreateAccountResponse> responseObserver) {
 
         if(debugFlag) {
-            System.err.println("[DEBUG: createAccount Request started]\n");
+            debu("createAccount Request started\n");
         }
 
         if(!server.getActivated()) {
@@ -62,13 +72,13 @@ public class UserServiceImpl extends UserServiceImplBase {
 
         ResponseCode code = OK;
 
-        synchronized(request.getUserId().intern()) {
-            if(server.existsAccount(request.getUserId())) {
-                code = USER_ALREADY_EXISTS;
-            }
-            else {
-                server.addAccount(request.getUserId());
-            }
+        //Check if account already exists
+        if(server.existsAccount(request.getUserId())) {
+            code = USER_ALREADY_EXISTS;
+        }
+        else {
+            //Add/Create account
+            server.addAccount(request.getUserId());
         }
 
         CreateAccountResponse response = CreateAccountResponse.newBuilder().setCode(code).build();
@@ -78,7 +88,7 @@ public class UserServiceImpl extends UserServiceImplBase {
         responseObserver.onCompleted();
 
         if(debugFlag) {
-            System.err.println("[DEBUG: createAccount Request completed]\n");
+            debu("createAccount Request completed\n");
         }
     }
 
@@ -86,7 +96,7 @@ public class UserServiceImpl extends UserServiceImplBase {
     public void deleteAccount(DeleteAccountRequest request, StreamObserver<DeleteAccountResponse> responseObserver) {
 
         if(debugFlag) {
-            System.err.println("[DEBUG: deleteAccount Request started]\n");
+            debu("deleteAccount Request started\n");
         }
 
         if(!server.getActivated()) {
@@ -96,15 +106,27 @@ public class UserServiceImpl extends UserServiceImplBase {
 
         ResponseCode code = OK;
 
-        synchronized(request.getUserId().intern()) {
-            if(!server.existsAccount(request.getUserId())) {
-                code = NON_EXISTING_USER;
-            }
-            else if(server.hasMoney(request.getUserId())) {
-                code = AMOUNT_NOT_SUPORTED;
-            }
-            else {
-                server.removeAccount(request.getUserId());
+        //account to be deleted, used only for the synchronization
+        Account account = server.getAccount(request.getUserId());
+
+        //check if account exists
+        if(account == null) {
+            code = NON_EXISTING_USER;
+        }
+        else{
+            synchronized(account) {
+                //check if the account still exists. In order to prevent a case where an account was deleted between the getter and the synchronization
+                if(!server.existsAccount(request.getUserId())) {
+                    code = NON_EXISTING_USER;
+                }
+                //check if there is money on the account
+                else if(server.hasMoney(request.getUserId())) {
+                    code = AMOUNT_NOT_SUPORTED;
+                }
+                else {
+                    //remove account
+                    server.removeAccount(request.getUserId());
+                }
             }
         }
 
@@ -115,7 +137,7 @@ public class UserServiceImpl extends UserServiceImplBase {
         responseObserver.onCompleted();
 
         if(debugFlag) {
-            System.err.println("[DEBUG: deleteAccount Request completed]\n");
+            debu("deleteAccount Request completed\n");
         }
     }
 
@@ -123,7 +145,7 @@ public class UserServiceImpl extends UserServiceImplBase {
     public void transferTo(TransferToRequest request, StreamObserver<TransferToResponse> responseObserver) {
 
         if(debugFlag) {
-            System.err.println("[DEBUG: transferTo Request started]\n");
+            debu("transferTo Request started\n");
         }
 
         if(!server.getActivated()) {
@@ -133,16 +155,27 @@ public class UserServiceImpl extends UserServiceImplBase {
 
         ResponseCode code = OK;
 
-        synchronized(request.getAccountTo().intern()){
-            synchronized(request.getAccountFrom().intern()){
-                if(!server.existsAccount(request.getAccountFrom()) || !server.existsAccount(request.getAccountTo())) {
-                     code = NON_EXISTING_USER;
-                }
-                else if(!server.hasMoney(request.getAccountFrom(), request.getAmount())) {
-                    code = AMOUNT_NOT_SUPORTED;
-                }
-                else {
-                    server.transferTo(request.getAccountFrom(), request.getAccountTo(), request.getAmount());
+        //accounts for the synchronization
+        Account accountTo = server.getAccount(request.getAccountTo());
+        Account accountFrom = server.getAccount(request.getAccountFrom());
+
+        if(accountTo == null || accountFrom == null) {
+            code = NON_EXISTING_USER;
+        }
+        else{
+            synchronized(accountFrom){
+                synchronized(accountTo){
+                    //check if the accounts still exist
+                    if(!server.existsAccount(request.getAccountTo()) || !server.existsAccount(request.getAccountFrom())) {
+                        code = NON_EXISTING_USER;
+                    }
+                    //check if the amount from has enought money for the trasnsaction
+                    else if(!server.hasMoney(request.getAccountFrom(), request.getAmount()) || !(request.getAmount() > 0)) {
+                        code = AMOUNT_NOT_SUPORTED;
+                    }
+                    else {
+                        server.transferTo(request.getAccountFrom(), request.getAccountTo(), request.getAmount());
+                    }
                 }
             }
         }
@@ -154,7 +187,7 @@ public class UserServiceImpl extends UserServiceImplBase {
         responseObserver.onCompleted();
 
         if(debugFlag) {
-            System.err.println("[DEBUG: transferTo Request completed]\n");
+            debu("transferTo Request completed\n");
         }
     }
 }
