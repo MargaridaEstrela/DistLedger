@@ -11,15 +11,6 @@ message PropagateStateRequest {
 
 message PropagateStateResponse {}
 
-message RegisterRequest {
-  string service = 1;
-  string type = 2;
-  string address = 3;
-}
-
-message RegisterResponse {}
-
 service DistLedgerCrossServerService {
-  rpc register(RegisterRequest) returns (RegisterResponse);
   rpc propagateState(PropagateStateRequest) returns (PropagateStateResponse);
 }

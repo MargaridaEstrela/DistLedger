@@ -6,8 +6,12 @@ import io.grpc.ServerBuilder;
 import pt.tecnico.distledger.server.domain.ServerState;
 import pt.tecnico.distledger.server.domain.UserServiceImpl;
 import pt.tecnico.distledger.server.domain.AdminServiceImpl;
+import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServer.*;
+import pt.ulisboa.tecnico.distledger.contract.namingserver.*;
+import io.grpc.ManagedChannel;
+import io.grpc.ManagedChannelBuilder;
 
-
+import io.grpc.StatusRuntimeException;
 import java.io.IOException;
 
 public class ServerMain {
@@ -34,6 +38,23 @@ public class ServerMain {
 		}
 
         final int port = Integer.parseInt(args[0]);
+		final String type = args[1];
+		final String address = "localhost:" + port;
+
+
+		final String host = "localhost";
+        final int namingServerPort = 5001;
+        final String target = host + ":" + namingServerPort;
+		final String service = "DistLedger";
+
+		final ManagedChannel channel = ManagedChannelBuilder.forTarget(target).usePlaintext().build();
+
+		NamingServerServiceGrpc.NamingServerServiceBlockingStub stub = NamingServerServiceGrpc.newBlockingStub(channel);
+
+		register(service,type,address,stub);
+
+		channel.shutdownNow();
+
 
 		ServerState serverState = new ServerState();
 
@@ -50,5 +71,19 @@ public class ServerMain {
 		// Do not exit the main thread. Wait until server is terminated.
 		server.awaitTermination();
     }
+
+	public static void register(String service, String type, String address, NamingServerServiceGrpc.NamingServerServiceBlockingStub stub) {
+
+        try {
+			
+            RegisterRequest registerRequest = RegisterRequest.newBuilder().setService(service).setType(type).setAddress(address).build();
+            RegisterResponse RegisterResponse = stub.register(registerRequest);
+
+        } catch (StatusRuntimeException e) {
+            System.out.println("Caught exception with description: " +
+                    e.getStatus().getDescription());
+        }
+    }
+
 }
 

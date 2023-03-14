@@ -1,0 +1,17 @@
+syntax = "proto3";
+package pt.ulisboa.tecnico.distledger.contract.namingserver;
+
+// Naming-Server interface
+
+
+message RegisterRequest {
+  string service = 1;
+  string type = 2;
+  string address = 3;
+}
+
+message RegisterResponse {}
+
+service NamingServerService {
+  rpc register(RegisterRequest) returns (RegisterResponse);
+}
