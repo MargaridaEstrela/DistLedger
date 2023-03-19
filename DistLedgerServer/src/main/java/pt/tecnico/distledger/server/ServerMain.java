@@ -63,19 +63,39 @@ public class ServerMain {
 
         Server server = ServerBuilder.forPort(port).addService(userImpl).addService(adminImpl).build();
 
-        server.start();
+		Runtime.getRuntime().addShutdownHook(new Thread(){
+		@Override
+		public void run()
+		{
+			try {
+				delete(service,address,stub);
+			} 
+			catch (StatusRuntimeException e) {
+				System.out.println("Error deleting server entry from Naming server: " + e.getLocalizedMessage());			
+			}
+			channel.shutdownNow();
+		}
+		});
 
-		// Server threads are running in the background.
-		System.out.println("Server started");
+		try {
+			server.start();
 
-		// Do not exit the main thread. Wait until server is terminated.
-		server.awaitTermination();
+			// Server threads are running in the background.
+			System.out.println("Server started");
+
+			// Do not exit the main thread. Wait until server is terminated.
+			server.awaitTermination();
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+			server.shutdownNow();
+		}
     }
 
 	public static void register(String service, String type, String address, NamingServerServiceGrpc.NamingServerServiceBlockingStub stub) {
 
         try {
-			
+
             RegisterRequest registerRequest = RegisterRequest.newBuilder().setService(service).setType(type).setAddress(address).build();
             RegisterResponse RegisterResponse = stub.register(registerRequest);
 
@@ -84,6 +104,18 @@ public class ServerMain {
                     e.getStatus().getDescription());
         }
     }
+
+	public static void delete(String service, String address, NamingServerServiceGrpc.NamingServerServiceBlockingStub stub) {
+		try {
+
+            DeleteRequest deleteRequest = DeleteRequest.newBuilder().setService(service).setAddress(address).build();
+            DeleteResponse DeleteResponse = stub.delete(deleteRequest);
+
+        } catch (StatusRuntimeException e) {
+            System.out.println("Caught exception with description: " +
+                    e.getStatus().getDescription());
+        }
+	}
 
 }
 
