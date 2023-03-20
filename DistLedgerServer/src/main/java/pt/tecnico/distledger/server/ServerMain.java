@@ -6,6 +6,7 @@ import io.grpc.ServerBuilder;
 import pt.tecnico.distledger.server.domain.ServerState;
 import pt.tecnico.distledger.server.domain.UserServiceImpl;
 import pt.tecnico.distledger.server.domain.AdminServiceImpl;
+import pt.tecnico.distledger.server.domain.DistLedgerCrossServerServiceImpl;
 import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServer.*;
 import pt.ulisboa.tecnico.distledger.contract.namingserver.*;
 import io.grpc.ManagedChannel;
@@ -59,23 +60,44 @@ public class ServerMain {
 		ServerState serverState = new ServerState();
 
 		final BindableService userImpl = new UserServiceImpl(serverState, debugFlag);
+		final BindableService crossImpl = new DistLedgerCrossServerServiceImpl(serverState, debugFlag);
 		final BindableService adminImpl = new AdminServiceImpl(serverState, debugFlag);
 
-        Server server = ServerBuilder.forPort(port).addService(userImpl).addService(adminImpl).build();
+        Server server = ServerBuilder.forPort(port).addService(userImpl).addService(adminImpl).addService(crossImpl).build();
 
-        server.start();
+		Runtime.getRuntime().addShutdownHook(new Thread(){
+		@Override
+		public void run()
+		{
+			try {
+				delete(service,address,stub);
+			} 
+			catch (StatusRuntimeException e) {
+				System.out.println("Error deleting server entry from Naming server: " + e.getLocalizedMessage());			
+			}
+			channel.shutdownNow();
+		}
+		});
 
-		// Server threads are running in the background.
-		System.out.println("Server started");
+		try {
+			server.start();
 
-		// Do not exit the main thread. Wait until server is terminated.
-		server.awaitTermination();
+			// Server threads are running in the background.
+			System.out.println("Server started");
+
+			// Do not exit the main thread. Wait until server is terminated.
+			server.awaitTermination();
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+			server.shutdownNow();
+		}
     }
 
 	public static void register(String service, String type, String address, NamingServerServiceGrpc.NamingServerServiceBlockingStub stub) {
 
         try {
-			
+
             RegisterRequest registerRequest = RegisterRequest.newBuilder().setService(service).setType(type).setAddress(address).build();
             RegisterResponse RegisterResponse = stub.register(registerRequest);
 
@@ -84,6 +106,18 @@ public class ServerMain {
                     e.getStatus().getDescription());
         }
     }
+
+	public static void delete(String service, String address, NamingServerServiceGrpc.NamingServerServiceBlockingStub stub) {
+		try {
+
+            DeleteRequest deleteRequest = DeleteRequest.newBuilder().setService(service).setAddress(address).build();
+            DeleteResponse DeleteResponse = stub.delete(deleteRequest);
+
+        } catch (StatusRuntimeException e) {
+            System.out.println("Caught exception with description: " +
+                    e.getStatus().getDescription());
+        }
+	}
 
 }
 

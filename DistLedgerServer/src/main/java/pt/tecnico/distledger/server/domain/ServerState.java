@@ -106,4 +106,23 @@ public class ServerState {
     public String getOperationType (Operation operation) {
         return operation.getType();
     }
+
+    private void executeOperation (Operation operation) {
+        if(operation.getType() == "CREATE") {
+            addAccount(operation.getAccount());
+        }
+        else if(operation.getType() == "DELETE") {
+            removeAccount(operation.getAccount());
+        }
+        else if(operation.getType() == "TRANSFER") {
+            TransferOp transferOperation = (TransferOp) operation;  
+            transferTo(transferOperation.getAccount(), transferOperation.getDestAccount(), transferOperation.getAmount());
+        }
+    }
+
+    public void update (List<Operation> operations) {
+        ArrayList<Operation> newLedger = new ArrayList<Operation> (operations);
+        List<Operation> ledger = newLedger.subList(this.getLedger().size(), newLedger.size());
+        ledger.forEach(operation -> executeOperation(operation));
+    }
 }

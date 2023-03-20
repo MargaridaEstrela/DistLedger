@@ -13,6 +13,10 @@ import pt.ulisboa.tecnico.distledger.contract.user.UserDistLedger.TransferToResp
 import pt.ulisboa.tecnico.distledger.contract.distledgerserver.LookupRequest;
 import pt.ulisboa.tecnico.distledger.contract.distledgerserver.LookupResponse;
 import pt.ulisboa.tecnico.distledger.contract.user.UserDistLedger.ResponseCode;
+import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServer.*;
+import pt.ulisboa.tecnico.distledger.contract.namingserver.*;
+import io.grpc.ManagedChannel;
+import io.grpc.ManagedChannelBuilder;
 
 import io.grpc.StatusRuntimeException;
 
@@ -34,6 +38,17 @@ public class UserService {
     // Get the ResponseCode of a response.
     public ResponseCode get_code() {
         return code;
+    }
+
+    private String lookup(String service, String qualifier) {
+        final String host = "localhost";
+        final int namingServerPort = 5001;
+        final String target = host + ":" + namingServerPort;
+        final ManagedChannel channel = ManagedChannelBuilder.forTarget(target).usePlaintext().build();
+        NamingServerServiceGrpc.NamingServerServiceBlockingStub stub2 = NamingServerServiceGrpc.newBlockingStub(channel);
+        LookupRequest lookupRequest = LookupRequest.newBuilder().setType(qualifier).setService(service).build();
+        LookupResponse lookupResponse = stub2.lookup(lookupRequest);
+        return lookupResponse.getAddress();
     }
 
     // To create a new account. Returns a ResponseCode
