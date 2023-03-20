@@ -46,7 +46,7 @@ public class UserService {
         NamingServerServiceGrpc.NamingServerServiceBlockingStub stub2 = NamingServerServiceGrpc.newBlockingStub(channel);
         LookupRequest lookupRequest = LookupRequest.newBuilder().setType(qualifier).setService(service).build();
         LookupResponse lookupResponse = stub2.lookup(lookupRequest);
-        return lookupResponse.getAddress;
+        return lookupResponse.getAddress();
     }
 
     // To create a new account. Returns a ResponseCode
