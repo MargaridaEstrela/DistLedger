@@ -17,6 +17,19 @@ import java.io.IOException;
 
 public class ServerMain {
 
+	/**
+	 * Set flag to true to print debug messages.
+	 * The flag can be set using the -Ddebug command line option.
+	 */    
+    private static boolean debugFlag = (System.getProperty("debug") != null);
+
+	// To print debug messages
+	public static void debug(String debugMessage) {
+		if (debugFlag) {
+			System.err.println("DEBUG: " + debugMessage);
+		}
+	}
+
     public static void main(String[] args) throws IOException, InterruptedException{
 
 		boolean debugFlag = false;
