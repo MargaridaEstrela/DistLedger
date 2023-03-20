@@ -6,6 +6,7 @@ import io.grpc.ServerBuilder;
 import pt.tecnico.distledger.server.domain.ServerState;
 import pt.tecnico.distledger.server.domain.UserServiceImpl;
 import pt.tecnico.distledger.server.domain.AdminServiceImpl;
+import pt.tecnico.distledger.server.domain.DistLedgerCrossServerServiceImpl;
 import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServer.*;
 import pt.ulisboa.tecnico.distledger.contract.namingserver.*;
 import io.grpc.ManagedChannel;
@@ -59,9 +60,10 @@ public class ServerMain {
 		ServerState serverState = new ServerState();
 
 		final BindableService userImpl = new UserServiceImpl(serverState, debugFlag);
+		final BindableService crossImpl = new DistLedgerCrossServerServiceImpl(serverState, debugFlag);
 		final BindableService adminImpl = new AdminServiceImpl(serverState, debugFlag);
 
-        Server server = ServerBuilder.forPort(port).addService(userImpl).addService(adminImpl).build();
+        Server server = ServerBuilder.forPort(port).addService(userImpl).addService(adminImpl).addService(crossImpl).build();
 
 		Runtime.getRuntime().addShutdownHook(new Thread(){
 		@Override
