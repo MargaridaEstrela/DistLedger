@@ -10,6 +10,8 @@ import pt.ulisboa.tecnico.distledger.contract.user.UserDistLedger.DeleteAccountR
 import pt.ulisboa.tecnico.distledger.contract.user.UserDistLedger.DeleteAccountResponse;
 import pt.ulisboa.tecnico.distledger.contract.user.UserDistLedger.TransferToRequest;
 import pt.ulisboa.tecnico.distledger.contract.user.UserDistLedger.TransferToResponse;
+import pt.ulisboa.tecnico.distledger.contract.distledgerserver.LookupRequest;
+import pt.ulisboa.tecnico.distledger.contract.distledgerserver.LookupResponse;
 import pt.ulisboa.tecnico.distledger.contract.user.UserDistLedger.ResponseCode;
 
 import io.grpc.StatusRuntimeException;
@@ -52,10 +54,10 @@ public class UserService {
 
             return code;
 
-        } catch (StatusRuntimeException e) {  
+        } catch (StatusRuntimeException e) {
             // Debug message
             UserClientMain.debug("Server " + server + " is unreachable");
-            
+
             System.out.println("Caught exception with description: " +
                     e.getStatus().getDescription());
         }
@@ -95,9 +97,10 @@ public class UserService {
         return ResponseCode.UNRECOGNIZED;
     }
 
-    /**
-     * To get the balance of a user. Returns a List with the respective number of the
-     * ResponseCode and the balance of the user (in case ResponseCode != UNRECOGNIZED).
+    /*
+     * To get the balance of a user. Returns a List with the respective number of
+     * the ResponseCode and the balance of the user (in case ResponseCode !=
+     * UNRECOGNIZED).
      */
     public List<Integer> balance(String server, String username) {
 
@@ -167,5 +170,33 @@ public class UserService {
         }
 
         return ResponseCode.UNRECOGNIZED;
+    }
+
+    /*
+     * To lookup all servers associated with a service. Returns the list of servers
+     * for the type requested.
+     * If none type had been requested, returns all the servers of the service. If
+     * one of them doesn't exist, returns an empty list.
+     */
+    public List<String> lookup(String serviceName, String type) {
+
+        List<String> res = new ArrayList<String>();
+
+        try {
+            LookupRequest lookupRequest = LookupRequest.newBuilder().setServiceName(serviceName).setType(type).build();
+            LookupResponse lookupResponse = this.stub.lookup(lookupRequest);
+
+            res = lookupResponse.getEntriesList();
+
+        } catch (StatusRuntimeException e) {
+            // Debug message
+            UserClientMain.debug("Server " + serviceName + " is unreachable");
+
+            System.out.println("Caught exception with description: " +
+                    e.getStatus().getDescription());
+        }
+
+        return res;
+
     }
 }

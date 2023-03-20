@@ -11,6 +11,16 @@ message PropagateStateRequest {
 
 message PropagateStateResponse {}
 
+message LookupRequest {
+  String serviceName = 1;
+  String type = 2;
+}
+
+message LookupResponse {
+  List<String> serverEntries = 1;
+}
+
 service DistLedgerCrossServerService {
   rpc propagateState(PropagateStateRequest) returns (PropagateStateResponse);
+  rpc lookup(LookupRequest) returns (LookupResponse);
 }

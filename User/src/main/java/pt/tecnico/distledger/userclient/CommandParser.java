@@ -2,6 +2,7 @@ package pt.tecnico.distledger.userclient;
 
 import pt.tecnico.distledger.userclient.grpc.UserService;
 import pt.ulisboa.tecnico.distledger.contract.user.UserDistLedger.ResponseCode;
+import pt.tecnico.distledger.namingserver.ServerEntry;
 
 import java.util.List;
 import java.util.Scanner;
@@ -14,6 +15,7 @@ public class CommandParser {
     private static final String DELETE_ACCOUNT = "deleteAccount";
     private static final String TRANSFER_TO = "transferTo";
     private static final String BALANCE = "balance";
+    private static final String LOOKUP = "lookup";
     private static final String HELP = "help";
     private static final String EXIT = "exit";
 
@@ -51,6 +53,10 @@ public class CommandParser {
 
                     case BALANCE:
                         this.balance(line);
+                        break;
+
+                    case LOOKUP:
+                        this.lookup(line);
                         break;
 
                     case HELP:
@@ -147,6 +153,23 @@ public class CommandParser {
         ResponseCode code = this.userService.transferTo(server, from, dest, amount);
 
         System.out.println(formatToString(code));
+    }
+
+    // To print the lookup command usage
+    private void lookup(String line){
+        String[] split = line.split(SPACE);
+
+        if (split.length!= 3){
+            this.printUsage();
+            return;
+        }
+
+        String serviceName = split[1];
+        String type = split[2];
+
+        List<String> serverEntries = this.userService.lookup(serviceName, type);
+
+        System.out.println(serverEntries);
     }
 
     // To convert the ResponseCode objetc to a String

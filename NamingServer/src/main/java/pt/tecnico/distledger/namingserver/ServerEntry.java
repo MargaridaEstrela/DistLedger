@@ -25,4 +25,7 @@ public class ServerEntry {
         return type;
     }
 
+    public String toString() {
+        return "host: " + host + " type: " + type + " port: " + port;
+    }
 }
