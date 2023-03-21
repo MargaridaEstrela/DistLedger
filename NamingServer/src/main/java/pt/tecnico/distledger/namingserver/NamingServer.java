@@ -51,13 +51,6 @@ public class NamingServer {
             System.out.printf("arg[%d] = %s%n", i, args[i]);
         }
 
-        // check arguments
-        if (args.length != 2 && args.length != 3) {
-            System.err.println("Argument(s) missing!");
-            System.err.println("Usage: mvn exec:java -Dexec.args=<host> <port>");
-            return;
-        }
-
         final int port = 5001;
         NamingServer namingServer = new NamingServer();
         
