@@ -1,14 +1,15 @@
 package pt.tecnico.distledger.namingserver;
 
-import java.lang.WeakPairMap.Pair.Lookup;
 import java.util.ArrayList;
 import java.util.List;
 
 import pt.tecnico.distledger.namingserver.NamingServer;
 import pt.tecnico.distledger.namingserver.ServerEntry;
 import pt.tecnico.distledger.namingserver.ServiceEntry;
-import pt.ulisboa.tecnico.distledger.contract.distledgerserver.CrossServerDistLedger.RegisterRequest;
-import pt.ulisboa.tecnico.distledger.contract.distledgerserver.CrossServerDistLedger.RegisterResponse;
+import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServer.RegisterRequest;
+import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServer.RegisterResponse;
+import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServer.LookupRequest;
+import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServer.LookupResponse;
 
 public class NamingServerServiceImpl {
     
@@ -34,7 +35,9 @@ public class NamingServerServiceImpl {
         if (this.debugFlag) {
             debug("Register service: " + serviceName + ", " + type + ", " + port + "started");
         }
-        
+
+        // Register a request to register
+        RegisterRequest
         RegisterResponse.Builder response = RegisterResponse.newBuilder();
 
         // Check if service name is already registered
@@ -43,19 +46,20 @@ public class NamingServerServiceImpl {
             ServiceEntry serviceEntry = new ServiceEntry(serviceName);
             serviceEntry.addServerEntry(serverEntry);
             namingServer.addServerName(serviceName, serviceEntry);
-            response.setStatus(RegisterResponse.Status.SUCCESS);
         } 
         else {
             System.err.println("ERROR: Not possible to register the server " + serviceName);
-            response.setStatus(RegisterResponse.Status.FAILURE);
         }
     }
 
-    public void lookup(String serviceName, String type) {
+    public void lookup(LookupRequest request, StreamObserver<LookupResponse> responseObserver) {
         if (this.debugFlag) {
-            debug("Lookup service: " + serviceName + ", " + type + "started");
+            namingServer.debug("Received lookup request");
         }
 
+        String serviceName = request.getServiceName();
+        String type = request.getType();
+        
         LookupResponse.Builder response = LookupResponse.newBuilder();
 
         List<String> result = new ArrayList<String>();
@@ -72,9 +76,6 @@ public class NamingServerServiceImpl {
                 }
             }
         }
-
-        response.addAllServers(result);
-        response.setStatus(LookupResponse.Status.SUCCESS);
     }
 
 }

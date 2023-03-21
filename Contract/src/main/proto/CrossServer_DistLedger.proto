@@ -11,17 +11,6 @@ message PropagateStateRequest {
 
 message PropagateStateResponse {}
 
-message LookupRequest {
-  string serviceName = 1;
-  string type = 2;
-}
-
-message LookupResponse {
-  repeated string serverEntry = 1;
-}
-
-
 service DistLedgerCrossServerService {
   rpc propagateState(PropagateStateRequest) returns (PropagateStateResponse);
-  rpc lookup(LookupRequest) returns (LookupResponse);
 }

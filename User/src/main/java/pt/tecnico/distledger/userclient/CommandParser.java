@@ -2,7 +2,6 @@ package pt.tecnico.distledger.userclient;
 
 import pt.tecnico.distledger.userclient.grpc.UserService;
 import pt.ulisboa.tecnico.distledger.contract.user.UserDistLedger.ResponseCode;
-import pt.tecnico.distledger.namingserver.ServerEntry;
 
 import java.util.List;
 import java.util.Scanner;
@@ -168,8 +167,8 @@ public class CommandParser {
         String type = split[2];
 
         List<String> serverEntries = this.userService.lookup(serviceName, type);
-
         System.out.println(serverEntries);
+
     }
 
     // To convert the ResponseCode objetc to a String

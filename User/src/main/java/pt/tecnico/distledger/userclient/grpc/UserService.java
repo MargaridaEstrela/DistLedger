@@ -10,10 +10,9 @@ import pt.ulisboa.tecnico.distledger.contract.user.UserDistLedger.DeleteAccountR
 import pt.ulisboa.tecnico.distledger.contract.user.UserDistLedger.DeleteAccountResponse;
 import pt.ulisboa.tecnico.distledger.contract.user.UserDistLedger.TransferToRequest;
 import pt.ulisboa.tecnico.distledger.contract.user.UserDistLedger.TransferToResponse;
-import pt.ulisboa.tecnico.distledger.contract.distledgerserver.LookupRequest;
-import pt.ulisboa.tecnico.distledger.contract.distledgerserver.LookupResponse;
+import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServer.LookupRequest;
+import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServer.LookupResponse;
 import pt.ulisboa.tecnico.distledger.contract.user.UserDistLedger.ResponseCode;
-import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServer.*;
 import pt.ulisboa.tecnico.distledger.contract.namingserver.*;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
@@ -38,17 +37,6 @@ public class UserService {
     // Get the ResponseCode of a response.
     public ResponseCode get_code() {
         return code;
-    }
-
-    private String lookup(String service, String qualifier) {
-        final String host = "localhost";
-        final int namingServerPort = 5001;
-        final String target = host + ":" + namingServerPort;
-        final ManagedChannel channel = ManagedChannelBuilder.forTarget(target).usePlaintext().build();
-        NamingServerServiceGrpc.NamingServerServiceBlockingStub stub2 = NamingServerServiceGrpc.newBlockingStub(channel);
-        LookupRequest lookupRequest = LookupRequest.newBuilder().setType(qualifier).setService(service).build();
-        LookupResponse lookupResponse = stub2.lookup(lookupRequest);
-        return lookupResponse.getAddress();
     }
 
     // To create a new account. Returns a ResponseCode
@@ -198,10 +186,18 @@ public class UserService {
         List<String> res = new ArrayList<String>();
 
         try {
-            LookupRequest lookupRequest = LookupRequest.newBuilder().setServiceName(serviceName).setType(type).build();
-            LookupResponse lookupResponse = this.stub.lookup(lookupRequest);
+            final String host = "localhost";
+            final int namingServerPort = 5001;
+            final String target = host + ":" + namingServerPort;
+            final ManagedChannel channel = ManagedChannelBuilder.forTarget(target).usePlaintext().build();
+            NamingServerServiceGrpc.NamingServerServiceBlockingStub stub2 = NamingServerServiceGrpc.newBlockingStub(channel);
 
-            res = lookupResponse.getEntriesList();
+            LookupRequest lookupRequest = LookupRequest.newBuilder().setServiceName(serviceName).setType(type).build();
+            LookupResponse lookupResponse = stub2.lookup(lookupRequest);
+            
+            for (String server : lookupResponse.getServersList()) {
+                res.add(server);
+            }
 
         } catch (StatusRuntimeException e) {
             // Debug message
