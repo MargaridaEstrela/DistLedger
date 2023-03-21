@@ -202,6 +202,7 @@ public class CommandParser {
                         "- deleteAccount <server> <username>\n" +
                         "- balance <server> <username>\n" +
                         "- transferTo <server> <username_from> <username_to> <amount>\n" +
+                        "- lookup <serviceName> <type>\n" +
                         "- exit\n");
     }
 }

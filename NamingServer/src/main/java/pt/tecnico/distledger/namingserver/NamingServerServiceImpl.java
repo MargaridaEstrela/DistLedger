@@ -12,29 +12,24 @@ import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServer.Register
 import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServer.LookupRequest;
 import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServer.LookupResponse;
 
-public class NamingServerServiceImpl {
+import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServerServiceGrpc;
+import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServerServiceGrpc.NamingServerServiceImplBase;
+
+public class NamingServerServiceImpl extends NamingServerServiceGrpc.NamingServerServiceImplBase {
     
     // Private variables
     private NamingServer namingServer;
     private boolean debugFlag;
 
     // Constructor
-    public NamingServerServiceImpl(NamingServer namingServer, boolean debugFlag) {
+    public NamingServerServiceImpl(NamingServer namingServer) {
         this.namingServer = namingServer;
-        this.debugFlag = debugFlag;
     }
-
-    //debug
-    public void debug(String debugMessage) {
-        if (this.debugFlag) {
-            System.err.println("DEBUG: " + debugMessage);
-        }
-    } 
 
     public void register(RegisterRequest request, StreamObserver<RegisterResponse> responseObserver) {
         
         if (this.debugFlag) {
-            debug("Register service: started");
+            namingServer.debug("Register service: started");
         }
 
         // Register a request to register
@@ -56,7 +51,7 @@ public class NamingServerServiceImpl {
 		responseObserver.onCompleted();
 
         if (this.debugFlag) {
-            debug("Register service: ended");
+            namingServer.debug("Register service: ended");
         }
     }
 

@@ -2,9 +2,10 @@ package pt.tecnico.distledger.namingserver;
 
 import java.io.IOException;
 import java.util.Map;
+
+import io.grpc.BindableService;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
-
 
 public class NamingServer {
     /**
@@ -54,8 +55,11 @@ public class NamingServer {
         final int port = 5001;
         NamingServer namingServer = new NamingServer();
         
+        final BindableService namingServerServiceImpl = new NamingServerServiceImpl(namingServer);
+
         // Create a new server to listen on port
         ServerBuilder serverBuilder = ServerBuilder.forPort(port);
+        serverBuilder.addService(namingServerServiceImpl);
         
         Server server = serverBuilder.build();
     
