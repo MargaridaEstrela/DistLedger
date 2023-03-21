@@ -73,10 +73,9 @@ public class ServerMain {
 		ServerState serverState = new ServerState();
 
 		final BindableService userImpl = new UserServiceImpl(serverState, debugFlag);
-		final BindableService crossImpl = new DistLedgerCrossServerServiceImpl(serverState, debugFlag);
 		final BindableService adminImpl = new AdminServiceImpl(serverState, debugFlag);
 
-        Server server = ServerBuilder.forPort(port).addService(userImpl).addService(adminImpl).addService(crossImpl).build();
+        Server server = ServerBuilder.forPort(port).addService(userImpl).addService(adminImpl).build();
 
 		Runtime.getRuntime().addShutdownHook(new Thread(){
 		@Override

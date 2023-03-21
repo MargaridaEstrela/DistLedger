@@ -43,8 +43,12 @@ public class UserService {
     public ResponseCode createAccount(String server, String username) {
 
         try {
+            final ManagedChannel channel = ManagedChannelBuilder.forTarget(lookup("DistLedger", server).get(0)).usePlaintext().build();
+            UserServiceGrpc.UserServiceBlockingStub stub = UserServiceGrpc.newBlockingStub(channel);
+
+
             CreateAccountRequest createAccRequest = CreateAccountRequest.newBuilder().setUserId(username).build();
-            CreateAccountResponse createAccResponse = this.stub.createAccount(createAccRequest);
+            CreateAccountResponse createAccResponse = stub.createAccount(createAccRequest);
 
             ResponseCode code = createAccResponse.getCode();
 
@@ -74,8 +78,11 @@ public class UserService {
     public ResponseCode deleteAccount(String server, String username) {
 
         try {
+            final ManagedChannel channel = ManagedChannelBuilder.forTarget(lookup("DistLedger", server).get(0)).usePlaintext().build();
+            UserServiceGrpc.UserServiceBlockingStub stub = UserServiceGrpc.newBlockingStub(channel);
+
             DeleteAccountRequest deleteAccRequest = DeleteAccountRequest.newBuilder().setUserId(username).build();
-            DeleteAccountResponse deleteAccResponse = this.stub.deleteAccount(deleteAccRequest);
+            DeleteAccountResponse deleteAccResponse = stub.deleteAccount(deleteAccRequest);
 
             ResponseCode code = deleteAccResponse.getCode();
 
@@ -106,12 +113,14 @@ public class UserService {
      * UNRECOGNIZED).
      */
     public List<Integer> balance(String server, String username) {
+        final ManagedChannel channel = ManagedChannelBuilder.forTarget(lookup("DistLedger", server).get(0)).usePlaintext().build();
+        UserServiceGrpc.UserServiceBlockingStub stub = UserServiceGrpc.newBlockingStub(channel);
 
         List<Integer> res = new ArrayList<Integer>();
 
         try {
             BalanceRequest balanceRequest = BalanceRequest.newBuilder().setUserId(username).build();
-            BalanceResponse balanceResponse = this.stub.balance(balanceRequest);
+            BalanceResponse balanceResponse = stub.balance(balanceRequest);
 
             ResponseCode code = balanceResponse.getCode();
             int balance = balanceResponse.getValue();
@@ -146,9 +155,12 @@ public class UserService {
     public ResponseCode transferTo(String server, String from, String dest, Integer amount) {
 
         try {
+            final ManagedChannel channel = ManagedChannelBuilder.forTarget(lookup("DistLedger", server).get(0)).usePlaintext().build();
+            UserServiceGrpc.UserServiceBlockingStub stub = UserServiceGrpc.newBlockingStub(channel);
+
             TransferToRequest transferToRequest = TransferToRequest.newBuilder().setAccountFrom(from).setAccountTo(dest)
                     .setAmount(amount).build();
-            TransferToResponse transferToResponse = this.stub.transferTo(transferToRequest);
+            TransferToResponse transferToResponse = stub.transferTo(transferToRequest);
 
             ResponseCode code = transferToResponse.getCode();
 

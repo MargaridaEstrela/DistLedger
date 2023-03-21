@@ -36,11 +36,11 @@ public class NamingServerServiceImpl extends NamingServerServiceGrpc.NamingServe
         RegisterResponse response;
         String serviceName = request.getService();
         String type = request.getType();
-        String address = request.getAddress();
+        String[] address = request.getAddress().split(":");
 
         // Check if service name is already registered
         if (!namingServer.getServicesMap().containsKey(serviceName)) {
-            ServerEntry serverEntry = new ServerEntry(serviceName, type, address);
+            ServerEntry serverEntry = new ServerEntry(address[0], type, address[1]);
             ServiceEntry serviceEntry = new ServiceEntry(serviceName);
             serviceEntry.addServerEntry(serverEntry);
             namingServer.addServerName(serviceName, serviceEntry);
@@ -72,6 +72,12 @@ public class NamingServerServiceImpl extends NamingServerServiceGrpc.NamingServe
                 if (serviceEntry.getServiceName().equals(serviceName)) {
                     for (ServerEntry serverEntry : serviceEntry.getServiceEntriesList()) {
                         if (serverEntry.getType().equals(type)) {
+                            server = serverEntry.getHost() + ":" + serverEntry.getPort();
+                            response.addServers(server);
+                        }
+                    }
+                    if(response.getServersList().size() == 0) {
+                        for (ServerEntry serverEntry : serviceEntry.getServiceEntriesList()) {
                             server = serverEntry.getHost() + ":" + serverEntry.getPort();
                             response.addServers(server);
                         }
