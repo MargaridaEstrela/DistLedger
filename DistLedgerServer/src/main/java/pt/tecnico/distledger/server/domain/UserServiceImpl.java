@@ -16,7 +16,6 @@ import pt.ulisboa.tecnico.distledger.contract.DistLedgerCommonDefinitions;
 import pt.ulisboa.tecnico.distledger.contract.DistLedgerCommonDefinitions.*;
 import pt.ulisboa.tecnico.distledger.contract.distledgerserver.CrossServerDistLedger.PropagateStateRequest;
 import pt.ulisboa.tecnico.distledger.contract.distledgerserver.CrossServerDistLedger.PropagateStateResponse;
-import pt.ulisboa.tecnico.distledger.contract.distledgerserver.CrossServerDistLedger;
 
 import io.grpc.StatusRuntimeException;
 import static io.grpc.Status.UNAVAILABLE;
@@ -47,10 +46,12 @@ public class UserServiceImpl extends UserServiceImplBase {
     @Override
     public void balance(BalanceRequest request, StreamObserver<BalanceResponse> responseObserver) {
 
+        //Check debug flag
         if(debugFlag) {
             debug("balance Request started\n");
         }
 
+        //Check if the server is active
         if(!server.getActivated()) {
             responseObserver.onError(UNAVAILABLE.withDescription("Server is Unavailable").asRuntimeException());
             return;
@@ -64,13 +65,14 @@ public class UserServiceImpl extends UserServiceImplBase {
             code = NON_EXISTING_USER;
         }
         else {
+            //get balance
             response.setValue(server.getMoneyAccount(request.getUserId()));
         }
 
         responseObserver.onNext(response.setCode(code).build());
-            
         responseObserver.onCompleted();
 
+        //Check debug flag
         if(debugFlag) {
             debug("balance Request completed\n");
         }
@@ -79,10 +81,12 @@ public class UserServiceImpl extends UserServiceImplBase {
     @Override
     public void createAccount(CreateAccountRequest request, StreamObserver<CreateAccountResponse> responseObserver) {
 
+        //Check debug flag
         if(debugFlag) {
             debug("createAccount Request started\n");
         }
 
+        //Check if the server is active
         if(!server.getActivated()) {
             responseObserver.onError(UNAVAILABLE.withDescription("Server is Unavailable").asRuntimeException());
             return;
@@ -90,6 +94,7 @@ public class UserServiceImpl extends UserServiceImplBase {
 
         ResponseCode code = OK;
 
+        //Check if this operation can be performed on this server
         if (!this.type.equals("A")) {
             responseObserver.onError(UNAVAILABLE.withDescription("Server is Unavailable").asRuntimeException());
             return;
@@ -102,11 +107,17 @@ public class UserServiceImpl extends UserServiceImplBase {
         else {
             //Add/Create account
             server.addAccount(request.getUserId());
-            if(propagate() < 0) {
+
+            //try to propagate the changes to the server B
+            if(propagate() < 0) {   //-1 in case of failure
+                //remove the account created
                 server.removeAccount(request.getUserId());
-                //TODO REMOVE LAST 2 OPERATIONS
+
+                //Rollback the createAccount operation and the deleteAccount used to rollback the changes
                 server.removeOperation();
                 server.removeOperation();
+
+                //server B is unavailable
                 responseObserver.onError(UNAVAILABLE.withDescription("Server is Unavailable").asRuntimeException());
                 return;
             }
@@ -115,9 +126,9 @@ public class UserServiceImpl extends UserServiceImplBase {
         CreateAccountResponse response = CreateAccountResponse.newBuilder().setCode(code).build();
 
         responseObserver.onNext(response);
-
         responseObserver.onCompleted();
 
+        //Check debug flag
         if(debugFlag) {
             debug("createAccount Request completed\n");
         }
@@ -126,10 +137,12 @@ public class UserServiceImpl extends UserServiceImplBase {
     @Override
     public void deleteAccount(DeleteAccountRequest request, StreamObserver<DeleteAccountResponse> responseObserver) {
 
+        //Check debug flag
         if(debugFlag) {
             debug("deleteAccount Request started\n");
         }
 
+        //Check if the server is active
         if(!server.getActivated()) {
             responseObserver.onError(UNAVAILABLE.withDescription("Server is Unavailable").asRuntimeException());
             return;
@@ -137,6 +150,7 @@ public class UserServiceImpl extends UserServiceImplBase {
 
         ResponseCode code = OK;
 
+        //Check if this operation can be performed on this server
         if (!this.type.equals("A")) {
             responseObserver.onError(UNAVAILABLE.withDescription("Server is Unavailable").asRuntimeException());
             return;
@@ -162,10 +176,17 @@ public class UserServiceImpl extends UserServiceImplBase {
                 else {
                     //remove account
                     server.removeAccount(request.getUserId());
-                    if(propagate() < 0) {
+
+                    //propagate the changes to the server B
+                    if(propagate() < 0) {   //-1 if error on server B
+                        //Rollback the changes by recreating the account deleted
                         server.addAccount(request.getUserId());
+
+                        //Rollback the createAccount operation and the deleteAccount used to rollback the changes
                         server.removeOperation();
                         server.removeOperation();
+
+                        //Server B is unavailable so the operation can not be performed
                         responseObserver.onError(UNAVAILABLE.withDescription("Server is Unavailable").asRuntimeException());
                         return;
                     }
@@ -176,9 +197,9 @@ public class UserServiceImpl extends UserServiceImplBase {
         DeleteAccountResponse response = DeleteAccountResponse.newBuilder().setCode(code).build();
 
         responseObserver.onNext(response);
-            
         responseObserver.onCompleted();
 
+        //Check debug flag
         if(debugFlag) {
             debug("deleteAccount Request completed\n");
         }
@@ -187,10 +208,12 @@ public class UserServiceImpl extends UserServiceImplBase {
     @Override
     public void transferTo(TransferToRequest request, StreamObserver<TransferToResponse> responseObserver) {
 
+        //Check debug flag
         if(debugFlag) {
             debug("transferTo Request started\n");
         }
 
+        //Check if the server is active
         if(!server.getActivated()) {
             responseObserver.onError(UNAVAILABLE.withDescription("Server is Unavailable").asRuntimeException());
             return;
@@ -198,6 +221,7 @@ public class UserServiceImpl extends UserServiceImplBase {
 
         ResponseCode code = OK;
 
+        //Check if this operation can be performed on this server
         if (!this.type.equals("A")) {
             responseObserver.onError(UNAVAILABLE.withDescription("Server is Unavailable").asRuntimeException());
             return;
@@ -222,11 +246,19 @@ public class UserServiceImpl extends UserServiceImplBase {
                         code = AMOUNT_NOT_SUPORTED;
                     }
                     else {
+                        //execute the operation
                         server.transferTo(request.getAccountFrom(), request.getAccountTo(), request.getAmount());
-                        if(propagate() < 0) {
+
+                        //propagate the new state
+                        if(propagate() < 0) {   //-1 if failure on the B server
+                            //Rolback the transferTo Operation
                             server.transferTo(request.getAccountTo(), request.getAccountFrom(), request.getAmount());
+
+                            //Rollback the createAccount operation and the deleteAccount used to rollback the changes
                             server.removeOperation();
                             server.removeOperation();
+
+                            //Server B is unavailable so the operation can not be performed
                             responseObserver.onError(UNAVAILABLE.withDescription("Server is Unavailable").asRuntimeException());
                             return;
                         }
@@ -238,9 +270,9 @@ public class UserServiceImpl extends UserServiceImplBase {
         TransferToResponse response = TransferToResponse.newBuilder().setCode(code).build();
 
         responseObserver.onNext(response);
-            
         responseObserver.onCompleted();
 
+        //Check debug flag
         if(debugFlag) {
             debug("transferTo Request completed\n");
         }
@@ -249,19 +281,26 @@ public class UserServiceImpl extends UserServiceImplBase {
     private List<String> lookup() {
 
         List<String> res = new ArrayList<String>();
+
+        //Definition of the service and server type to find
         String serviceName = "DistLedger";
         String type = "B";
 
         try {
+            //naming server address
             final String host = "localhost";
             final int namingServerPort = 5001;
             final String target = host + ":" + namingServerPort;
+
+            //open a stub with the naming server
             final ManagedChannel channel = ManagedChannelBuilder.forTarget(target).usePlaintext().build();
             NamingServerServiceGrpc.NamingServerServiceBlockingStub stub2 = NamingServerServiceGrpc.newBlockingStub(channel);
 
+            //Request the information of the server
             LookupRequest lookupRequest = LookupRequest.newBuilder().setServiceName(serviceName).setType(type).build();
             LookupResponse lookupResponse = stub2.lookup(lookupRequest);
             
+            //Create list with all the answers
             for (String server : lookupResponse.getServersList()) {
                 res.add(server);
             }
@@ -269,7 +308,7 @@ public class UserServiceImpl extends UserServiceImplBase {
         } catch (StatusRuntimeException e) {
             // Debug message
             debug("Server " + serviceName + " is unreachable");
-
+            
             System.out.println("Caught exception with description: " +
                     e.getStatus().getDescription());
         }
@@ -277,12 +316,16 @@ public class UserServiceImpl extends UserServiceImplBase {
     }
 
     private int propagate() {
+
+        //get the list with type B servers
         List<String> addresses = this.lookup();
 
+        //List of operations on the current server (ledger)
         ArrayList<pt.tecnico.distledger.server.domain.operation.Operation> operations = new ArrayList(server.getLedger());
 
         LedgerState.Builder ledger = LedgerState.newBuilder();
 
+        //Retrieve all operations done so far
         for (pt.tecnico.distledger.server.domain.operation.Operation operation : operations) {
             pt.ulisboa.tecnico.distledger.contract.DistLedgerCommonDefinitions.Operation.Builder operationContract = DistLedgerCommonDefinitions.Operation.newBuilder();
 
@@ -306,11 +349,13 @@ public class UserServiceImpl extends UserServiceImplBase {
             ledger.addLedger(operationContract.build());
         }
         
+        //Request message
         PropagateStateRequest request = PropagateStateRequest.newBuilder().setState(ledger.build()).build();
 
-
+        //propagate to all B servers
         for (String address : addresses) {
 
+            //Try to propagate to all server if unavailable return -1 else return 0
             try {
                 final ManagedChannel channel = ManagedChannelBuilder.forTarget(address).usePlaintext().build();
                 DistLedgerCrossServerServiceGrpc.DistLedgerCrossServerServiceBlockingStub stub = DistLedgerCrossServerServiceGrpc.newBlockingStub(channel);
