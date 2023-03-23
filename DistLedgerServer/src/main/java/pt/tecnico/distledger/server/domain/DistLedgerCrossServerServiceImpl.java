@@ -4,6 +4,7 @@ import io.grpc.stub.StreamObserver;
 import pt.ulisboa.tecnico.distledger.contract.distledgerserver.DistLedgerCrossServerServiceGrpc.DistLedgerCrossServerServiceImplBase;
 import pt.ulisboa.tecnico.distledger.contract.distledgerserver.CrossServerDistLedger.*;
 import pt.ulisboa.tecnico.distledger.contract.DistLedgerCommonDefinitions.*;
+import static io.grpc.Status.UNAVAILABLE;
 import pt.tecnico.distledger.server.domain.operation.*;
 
 import java.util.ArrayList;
@@ -24,6 +25,11 @@ public class DistLedgerCrossServerServiceImpl extends DistLedgerCrossServerServi
 
     @Override
     public void propagateState(PropagateStateRequest request, StreamObserver<PropagateStateResponse> responseObserver) {
+
+        if(!server.getActivated()) {
+            responseObserver.onError(UNAVAILABLE.withDescription("Server is Unavailable").asRuntimeException());
+            return;
+        }
 
         List<pt.tecnico.distledger.server.domain.operation.Operation> ledger = new ArrayList<pt.tecnico.distledger.server.domain.operation.Operation>();
         request.getState().getLedgerList().forEach(op -> addOperation(ledger, op));

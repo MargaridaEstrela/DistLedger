@@ -4,19 +4,37 @@ import io.grpc.stub.StreamObserver;
 import pt.ulisboa.tecnico.distledger.contract.user.UserServiceGrpc.UserServiceImplBase;
 import pt.ulisboa.tecnico.distledger.contract.user.UserDistLedger.*;
 import pt.tecnico.distledger.server.domain.account.Account;
+import pt.tecnico.distledger.server.domain.operation.*;
 import static pt.ulisboa.tecnico.distledger.contract.user.UserDistLedger.ResponseCode.*;
+import io.grpc.ManagedChannel;
+import io.grpc.ManagedChannelBuilder;
+import pt.ulisboa.tecnico.distledger.contract.namingserver.*;
+import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServer.LookupRequest;
+import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServer.LookupResponse;
+import pt.ulisboa.tecnico.distledger.contract.distledgerserver.*;
+import pt.ulisboa.tecnico.distledger.contract.DistLedgerCommonDefinitions;
+import pt.ulisboa.tecnico.distledger.contract.DistLedgerCommonDefinitions.*;
+import pt.ulisboa.tecnico.distledger.contract.distledgerserver.CrossServerDistLedger.PropagateStateRequest;
+import pt.ulisboa.tecnico.distledger.contract.distledgerserver.CrossServerDistLedger.PropagateStateResponse;
+import pt.ulisboa.tecnico.distledger.contract.distledgerserver.CrossServerDistLedger;
+
+import io.grpc.StatusRuntimeException;
 import static io.grpc.Status.UNAVAILABLE;
+import java.util.ArrayList;
+import java.util.List;
 
 public class UserServiceImpl extends UserServiceImplBase {
 
     //Private variables
     private ServerState server;
     private boolean debugFlag;
+    private String type;
 
     //Constructor
-    public UserServiceImpl(ServerState server, boolean debugFlag) {
+    public UserServiceImpl(ServerState server, boolean debugFlag, String type) {
         this.server = server;
         this.debugFlag = debugFlag;
+        this.type = type;
     }
 
     //debug
@@ -72,6 +90,11 @@ public class UserServiceImpl extends UserServiceImplBase {
 
         ResponseCode code = OK;
 
+        if (!this.type.equals("A")) {
+            responseObserver.onError(UNAVAILABLE.withDescription("Server is Unavailable").asRuntimeException());
+            return;
+        }
+
         //Check if account already exists
         if(server.existsAccount(request.getUserId())) {
             code = USER_ALREADY_EXISTS;
@@ -80,11 +103,17 @@ public class UserServiceImpl extends UserServiceImplBase {
             //Add/Create account
             server.addAccount(request.getUserId());
         }
+        if(propagate() < 0) {
+            server.removeAccount(request.getUserId());
+            //TODO REMOVE LAST 2 OPERATIONS
+            responseObserver.onError(UNAVAILABLE.withDescription("Server is Unavailable").asRuntimeException());
+            return;
+        }
 
         CreateAccountResponse response = CreateAccountResponse.newBuilder().setCode(code).build();
 
         responseObserver.onNext(response);
-            
+
         responseObserver.onCompleted();
 
         if(debugFlag) {
@@ -106,6 +135,11 @@ public class UserServiceImpl extends UserServiceImplBase {
 
         ResponseCode code = OK;
 
+        if (!this.type.equals("A")) {
+            responseObserver.onError(UNAVAILABLE.withDescription("Server is Unavailable").asRuntimeException());
+            return;
+        }
+
         //account to be deleted, used only for the synchronization
         Account account = server.getAccount(request.getUserId());
 
@@ -126,6 +160,11 @@ public class UserServiceImpl extends UserServiceImplBase {
                 else {
                     //remove account
                     server.removeAccount(request.getUserId());
+                }
+                if(propagate() < 0) {
+                    server.addAccount(request.getUserId());
+                    responseObserver.onError(UNAVAILABLE.withDescription("Server is Unavailable").asRuntimeException());
+                    return;
                 }
             }
         }
@@ -155,6 +194,11 @@ public class UserServiceImpl extends UserServiceImplBase {
 
         ResponseCode code = OK;
 
+        if (!this.type.equals("A")) {
+            responseObserver.onError(UNAVAILABLE.withDescription("Server is Unavailable").asRuntimeException());
+            return;
+        }
+
         //accounts for the synchronization
         Account accountTo = server.getAccount(request.getAccountTo());
         Account accountFrom = server.getAccount(request.getAccountFrom());
@@ -176,6 +220,11 @@ public class UserServiceImpl extends UserServiceImplBase {
                     else {
                         server.transferTo(request.getAccountFrom(), request.getAccountTo(), request.getAmount());
                     }
+                    if(propagate() < 0) {
+                        server.transferTo(request.getAccountTo(), request.getAccountFrom(), request.getAmount());
+                        responseObserver.onError(UNAVAILABLE.withDescription("Server is Unavailable").asRuntimeException());
+                        return;
+                    }
                 }
             }
         }
@@ -189,5 +238,84 @@ public class UserServiceImpl extends UserServiceImplBase {
         if(debugFlag) {
             debug("transferTo Request completed\n");
         }
+    }
+
+    private List<String> lookup() {
+
+        List<String> res = new ArrayList<String>();
+        String serviceName = "DistLedger";
+        String type = "B";
+
+        try {
+            final String host = "localhost";
+            final int namingServerPort = 5001;
+            final String target = host + ":" + namingServerPort;
+            final ManagedChannel channel = ManagedChannelBuilder.forTarget(target).usePlaintext().build();
+            NamingServerServiceGrpc.NamingServerServiceBlockingStub stub2 = NamingServerServiceGrpc.newBlockingStub(channel);
+
+            LookupRequest lookupRequest = LookupRequest.newBuilder().setServiceName(serviceName).setType(type).build();
+            LookupResponse lookupResponse = stub2.lookup(lookupRequest);
+            
+            for (String server : lookupResponse.getServersList()) {
+                res.add(server);
+            }
+
+        } catch (StatusRuntimeException e) {
+            // Debug message
+            debug("Server " + serviceName + " is unreachable");
+
+            System.out.println("Caught exception with description: " +
+                    e.getStatus().getDescription());
+        }
+        return res;
+    }
+
+    private int propagate() {
+        List<String> addresses = this.lookup();
+
+        ArrayList<pt.tecnico.distledger.server.domain.operation.Operation> operations = new ArrayList(server.getLedger());
+
+        LedgerState.Builder ledger = LedgerState.newBuilder();
+
+        for (pt.tecnico.distledger.server.domain.operation.Operation operation : operations) {
+            pt.ulisboa.tecnico.distledger.contract.DistLedgerCommonDefinitions.Operation.Builder operationContract = DistLedgerCommonDefinitions.Operation.newBuilder();
+
+            //Check the type of Operation
+            if(operation.getType() == "CREATE") {
+                operationContract.setType(OperationType.OP_CREATE_ACCOUNT);
+            }
+            else if(operation.getType() == "DELETE") {
+                operationContract.setType(OperationType.OP_DELETE_ACCOUNT);
+            }
+            else if(operation.getType() == "TRANSFER") {
+                operationContract.setType(OperationType.OP_TRANSFER_TO);
+                TransferOp transferoperation = (TransferOp) operation;
+                operationContract.setDestUserId(transferoperation.getDestAccount());
+                operationContract.setAmount(transferoperation.getAmount());
+            }
+            else {
+                operationContract.setType(OperationType.OP_UNSPECIFIED);
+            }
+            operationContract.setUserId(operation.getAccount());
+            ledger.addLedger(operationContract.build());
+        }
+        
+        PropagateStateRequest request = PropagateStateRequest.newBuilder().setState(ledger.build()).build();
+
+
+        for (String address : addresses) {
+
+            try {
+                final ManagedChannel channel = ManagedChannelBuilder.forTarget(address).usePlaintext().build();
+                DistLedgerCrossServerServiceGrpc.DistLedgerCrossServerServiceBlockingStub stub = DistLedgerCrossServerServiceGrpc.newBlockingStub(channel);
+
+                PropagateStateResponse response = stub.propagateState(request);
+            }
+
+            catch (StatusRuntimeException e) {
+                return -1;
+            }
+        }
+        return 0;
     }
 }

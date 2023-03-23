@@ -67,15 +67,13 @@ public class ServerMain {
 
 		register(service,type,address,stub);
 
-		channel.shutdownNow();
-
-
 		ServerState serverState = new ServerState();
 
-		final BindableService userImpl = new UserServiceImpl(serverState, debugFlag);
-		final BindableService adminImpl = new AdminServiceImpl(serverState, debugFlag);
+		final BindableService userImpl = new UserServiceImpl(serverState, debugFlag, type);
+		final BindableService adminImpl = new AdminServiceImpl(serverState, debugFlag, type);
+		final BindableService crossImpl = new DistLedgerCrossServerServiceImpl(serverState, debugFlag);
 
-        Server server = ServerBuilder.forPort(port).addService(userImpl).addService(adminImpl).build();
+        Server server = ServerBuilder.forPort(port).addService(userImpl).addService(adminImpl).addService(crossImpl).build();
 
 		Runtime.getRuntime().addShutdownHook(new Thread(){
 		@Override
@@ -111,7 +109,7 @@ public class ServerMain {
         try {
 
             RegisterRequest registerRequest = RegisterRequest.newBuilder().setService(service).setType(type).setAddress(address).build();
-            RegisterResponse RegisterResponse = stub.register(registerRequest);
+            RegisterResponse registerResponse = stub.register(registerRequest);
 
         } catch (StatusRuntimeException e) {
             System.out.println("Caught exception with description: " +
@@ -123,7 +121,7 @@ public class ServerMain {
 		try {
 
             DeleteRequest deleteRequest = DeleteRequest.newBuilder().setService(service).setAddress(address).build();
-            DeleteResponse DeleteResponse = stub.delete(deleteRequest);
+            DeleteResponse deleteResponse = stub.delete(deleteRequest);
 
         } catch (StatusRuntimeException e) {
             System.out.println("Caught exception with description: " +

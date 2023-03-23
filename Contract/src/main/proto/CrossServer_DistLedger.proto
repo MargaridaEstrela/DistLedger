@@ -5,6 +5,10 @@ import "DistLedgerCommonDefinitions.proto";
 
 // Cross-server interface of the DistLedger Service (only for phases 2 & 3 of the project)
 
+enum ResponseCode {
+  OK = 0;
+}
+
 message PropagateStateRequest {
   LedgerState state = 1;
 }

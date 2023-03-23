@@ -17,11 +17,13 @@ public class AdminServiceImpl extends AdminServiceImplBase {
     //Private variables
     private ServerState server;
     private boolean debugFlag;
+    private String type;
 
     //Constructor
-    public AdminServiceImpl(ServerState server, boolean debugFlag) {
+    public AdminServiceImpl(ServerState server, boolean debugFlag, String type) {
         this.server = server;
         this.debugFlag = debugFlag;
+        this.type = type;
     }
 
     //debug
