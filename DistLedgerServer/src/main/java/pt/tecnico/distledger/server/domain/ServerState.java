@@ -125,4 +125,8 @@ public class ServerState {
         List<Operation> ledger = newLedger.subList(this.getLedger().size(), newLedger.size());
         ledger.forEach(operation -> executeOperation(operation));
     }
+
+    public void removeOperation() {
+        this.getLedger().remove(this.getLedger().size()-1);
+    }
 }

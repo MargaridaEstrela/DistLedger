@@ -102,12 +102,14 @@ public class UserServiceImpl extends UserServiceImplBase {
         else {
             //Add/Create account
             server.addAccount(request.getUserId());
-        }
-        if(propagate() < 0) {
-            server.removeAccount(request.getUserId());
-            //TODO REMOVE LAST 2 OPERATIONS
-            responseObserver.onError(UNAVAILABLE.withDescription("Server is Unavailable").asRuntimeException());
-            return;
+            if(propagate() < 0) {
+                server.removeAccount(request.getUserId());
+                //TODO REMOVE LAST 2 OPERATIONS
+                server.removeOperation();
+                server.removeOperation();
+                responseObserver.onError(UNAVAILABLE.withDescription("Server is Unavailable").asRuntimeException());
+                return;
+            }
         }
 
         CreateAccountResponse response = CreateAccountResponse.newBuilder().setCode(code).build();
@@ -160,11 +162,13 @@ public class UserServiceImpl extends UserServiceImplBase {
                 else {
                     //remove account
                     server.removeAccount(request.getUserId());
-                }
-                if(propagate() < 0) {
-                    server.addAccount(request.getUserId());
-                    responseObserver.onError(UNAVAILABLE.withDescription("Server is Unavailable").asRuntimeException());
-                    return;
+                    if(propagate() < 0) {
+                        server.addAccount(request.getUserId());
+                        server.removeOperation();
+                        server.removeOperation();
+                        responseObserver.onError(UNAVAILABLE.withDescription("Server is Unavailable").asRuntimeException());
+                        return;
+                    }
                 }
             }
         }
@@ -219,11 +223,13 @@ public class UserServiceImpl extends UserServiceImplBase {
                     }
                     else {
                         server.transferTo(request.getAccountFrom(), request.getAccountTo(), request.getAmount());
-                    }
-                    if(propagate() < 0) {
-                        server.transferTo(request.getAccountTo(), request.getAccountFrom(), request.getAmount());
-                        responseObserver.onError(UNAVAILABLE.withDescription("Server is Unavailable").asRuntimeException());
-                        return;
+                        if(propagate() < 0) {
+                            server.transferTo(request.getAccountTo(), request.getAccountFrom(), request.getAmount());
+                            server.removeOperation();
+                            server.removeOperation();
+                            responseObserver.onError(UNAVAILABLE.withDescription("Server is Unavailable").asRuntimeException());
+                            return;
+                        }
                     }
                 }
             }
