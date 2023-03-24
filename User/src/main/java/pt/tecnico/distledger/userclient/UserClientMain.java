@@ -3,7 +3,7 @@ package pt.tecnico.distledger.userclient;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import pt.tecnico.distledger.userclient.grpc.UserService;
-import pt.ulisboa.tecnico.distledger.contract.user.UserServiceGrpc;
+import pt.ulisboa.tecnico.distledger.contract.namingserver.*;
 
 public class UserClientMain {
 
@@ -48,7 +48,7 @@ public class UserClientMain {
 		// It is up to the client to determine whether to block the call.
 		// Here we create a blocking stub, but an async stub,
 		// or an async stub with Future are always possible.
-		UserServiceGrpc.UserServiceBlockingStub stub = UserServiceGrpc.newBlockingStub(channel);
+		NamingServerServiceGrpc.NamingServerServiceBlockingStub stub = NamingServerServiceGrpc.newBlockingStub(channel);
 
         CommandParser parser = new CommandParser(new UserService(stub));
         parser.parseInput();

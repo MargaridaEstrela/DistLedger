@@ -25,11 +25,11 @@ import java.util.List;
 public class UserService {
 
     // Private variables
-    private UserServiceGrpc.UserServiceBlockingStub stub;
+    private NamingServerServiceGrpc.NamingServerServiceBlockingStub stub;
     private ResponseCode code;
 
     // Constructor
-    public UserService(UserServiceGrpc.UserServiceBlockingStub stub) {
+    public UserService(NamingServerServiceGrpc.NamingServerServiceBlockingStub stub) {
         this.stub = stub;
         code = ResponseCode.UNRECOGNIZED;
     }
@@ -206,16 +206,8 @@ public class UserService {
         List<String> res = new ArrayList<String>();
 
         try {
-            final String host = "localhost";
-            final int namingServerPort = 5001;
-            final String target = host + ":" + namingServerPort;
-            final ManagedChannel channel = ManagedChannelBuilder.forTarget(target).usePlaintext().build();
-            NamingServerServiceGrpc.NamingServerServiceBlockingStub stub2 = NamingServerServiceGrpc.newBlockingStub(channel);
-
             LookupRequest lookupRequest = LookupRequest.newBuilder().setServiceName(serviceName).setType(type).build();
-            LookupResponse lookupResponse = stub2.lookup(lookupRequest);
-
-            channel.shutdownNow();
+            LookupResponse lookupResponse = stub.lookup(lookupRequest);
             
             for (String server : lookupResponse.getServersList()) {
                 res.add(server);
