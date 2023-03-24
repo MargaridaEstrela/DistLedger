@@ -254,6 +254,7 @@ public class UserServiceImpl extends UserServiceImplBase {
                         //Server B is unavailable so the operation can not be performed
                         responseObserver.onError(UNAVAILABLE.withDescription("Server is Unavailable").asRuntimeException());
                         return;
+                    }
                 }
             }
         }
