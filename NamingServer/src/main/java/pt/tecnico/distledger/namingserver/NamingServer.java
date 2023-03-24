@@ -24,22 +24,27 @@ public class NamingServer {
         }
     }
 
+    // Constructor
     public NamingServer() {
         servicesMap = new java.util.HashMap<String, ServiceEntry>();
     }
 
+    // Get the servicesMap associated
     public Map<String, ServiceEntry> getServicesMap() {
         return servicesMap;
     }
 
+    // Set a new service entry associated with the specified service name
     public void addServerName(String serviceName, ServiceEntry serviceEntry) {
         servicesMap.put(serviceName, serviceEntry);
     }
 
+    // Get the service entry associated with the specified service name
     public ServiceEntry getServiceEntry(String serviceName) {
         return servicesMap.get(serviceName);
     }
 
+    // Remove the service entry associated with the specified service name
     public void removeServerName(String serviceName) {
         servicesMap.remove(serviceName);
     }
