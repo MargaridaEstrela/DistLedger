@@ -63,7 +63,7 @@ A User:
 ```s
 mvn compile exec:java
 ```
-A Naming server:
+A Dist Ledger server:
 ```s
 mvn compile exec:java -Dexec.args="<port> <server type>"
 ```
