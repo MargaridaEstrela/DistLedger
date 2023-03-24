@@ -51,10 +51,22 @@ mvn clean install
 
 ### To Run:
 
-A Naming server: mvn compile exec:java
-A Admin: mvn compile exec:java
-A User: mvn compile exec:java
-A Naming server: mvn compile exec:java -Dexec.args="<port> <server type>"
+A Naming server: 
+```s
+mvn compile exec:java
+```
+A Admin:
+```s
+mvn compile exec:java
+```
+A User:
+```s
+mvn compile exec:java
+```
+A Naming server:
+```s
+mvn compile exec:java -Dexec.args="<port> <server type>"
+```
 
 ## Built With
 
