@@ -3,7 +3,6 @@ package pt.tecnico.distledger.server.domain;
 import io.grpc.stub.StreamObserver;
 import pt.ulisboa.tecnico.distledger.contract.user.UserServiceGrpc.UserServiceImplBase;
 import pt.ulisboa.tecnico.distledger.contract.user.UserDistLedger.*;
-import pt.tecnico.distledger.server.domain.account.Account;
 import pt.tecnico.distledger.server.domain.operation.*;
 import static pt.ulisboa.tecnico.distledger.contract.user.UserDistLedger.ResponseCode.*;
 import io.grpc.ManagedChannel;
@@ -164,8 +163,6 @@ public class UserServiceImpl extends UserServiceImplBase {
                 code = NON_EXISTING_USER;
             }
             else {
-                //account to be deleted, used only for the synchronization
-                Account account = server.getAccount(request.getUserId());
                 //check if there is money on the account
                 if(server.hasMoney(request.getUserId())) {
                     code = AMOUNT_NOT_SUPORTED;
@@ -230,10 +227,6 @@ public class UserServiceImpl extends UserServiceImplBase {
                 code = NON_EXISTING_USER;
             }
             else {
-                //accounts for the synchronization
-                Account accountTo = server.getAccount(request.getAccountTo());
-                Account accountFrom = server.getAccount(request.getAccountFrom());
-
                 //check if the amount from has enought money for the trasnsaction
                 if(!server.hasMoney(request.getAccountFrom(), request.getAmount()) || !(request.getAmount() > 0)) {
                     code = AMOUNT_NOT_SUPORTED;

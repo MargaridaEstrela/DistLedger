@@ -50,6 +50,8 @@ public class UserService {
             CreateAccountRequest createAccRequest = CreateAccountRequest.newBuilder().setUserId(username).build();
             CreateAccountResponse createAccResponse = stub.createAccount(createAccRequest);
 
+            channel.shutdownNow();
+
             ResponseCode code = createAccResponse.getCode();
 
             // Debug messages
@@ -83,6 +85,8 @@ public class UserService {
 
             DeleteAccountRequest deleteAccRequest = DeleteAccountRequest.newBuilder().setUserId(username).build();
             DeleteAccountResponse deleteAccResponse = stub.deleteAccount(deleteAccRequest);
+
+            channel.shutdownNow();
 
             ResponseCode code = deleteAccResponse.getCode();
 
@@ -121,6 +125,8 @@ public class UserService {
         try {
             BalanceRequest balanceRequest = BalanceRequest.newBuilder().setUserId(username).build();
             BalanceResponse balanceResponse = stub.balance(balanceRequest);
+
+            channel.shutdownNow();
 
             ResponseCode code = balanceResponse.getCode();
             int balance = balanceResponse.getValue();
@@ -161,6 +167,8 @@ public class UserService {
             TransferToRequest transferToRequest = TransferToRequest.newBuilder().setAccountFrom(from).setAccountTo(dest)
                     .setAmount(amount).build();
             TransferToResponse transferToResponse = stub.transferTo(transferToRequest);
+
+            channel.shutdownNow();
 
             ResponseCode code = transferToResponse.getCode();
 
@@ -206,6 +214,8 @@ public class UserService {
 
             LookupRequest lookupRequest = LookupRequest.newBuilder().setServiceName(serviceName).setType(type).build();
             LookupResponse lookupResponse = stub2.lookup(lookupRequest);
+
+            channel.shutdownNow();
             
             for (String server : lookupResponse.getServersList()) {
                 res.add(server);

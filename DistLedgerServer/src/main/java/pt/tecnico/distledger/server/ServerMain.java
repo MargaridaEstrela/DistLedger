@@ -22,6 +22,7 @@ public class ServerMain {
 	 * The flag can be set using the -Ddebug command line option.
 	 */    
     private static boolean debugFlag = (System.getProperty("debug") != null);
+	private static boolean running;
 
 	// To print debug messages
 	public static void debug(String debugMessage) {
@@ -69,6 +70,9 @@ public class ServerMain {
 		NamingServerServiceGrpc.NamingServerServiceBlockingStub stub = NamingServerServiceGrpc.newBlockingStub(channel);
 
 		register(service,type,address,stub);
+		if(!running) {
+			System.exit(1);
+		}
 
 		ServerState serverState = new ServerState();
 
@@ -120,8 +124,10 @@ public class ServerMain {
 			//use the stub with the naming server to call the service register
             RegisterRequest registerRequest = RegisterRequest.newBuilder().setService(service).setType(type).setAddress(address).build();
             RegisterResponse registerResponse = stub.register(registerRequest);
+			running = true;
 
         } catch (StatusRuntimeException e) {
+			running = false;
             System.out.println("Caught exception with description: " +
                     e.getStatus().getDescription());
         }
@@ -130,9 +136,11 @@ public class ServerMain {
 	//To delete an entry on the naming server
 	public static void delete(String service, String address, NamingServerServiceGrpc.NamingServerServiceBlockingStub stub) {
 		try {
-			//use the stub with the naming server to call the service delete
-            DeleteRequest deleteRequest = DeleteRequest.newBuilder().setService(service).setAddress(address).build();
-            DeleteResponse deleteResponse = stub.delete(deleteRequest);
+			if(running) {
+				//use the stub with the naming server to call the service delete
+				DeleteRequest deleteRequest = DeleteRequest.newBuilder().setService(service).setAddress(address).build();
+				DeleteResponse deleteResponse = stub.delete(deleteRequest);
+			}
 
         } catch (StatusRuntimeException e) {
             System.out.println("Caught exception with description: " +

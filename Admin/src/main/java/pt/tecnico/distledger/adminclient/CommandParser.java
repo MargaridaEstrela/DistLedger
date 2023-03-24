@@ -64,6 +64,7 @@ public class CommandParser {
             }
 
         }
+        scanner.close();
     }
 
     // To print the activate command usage

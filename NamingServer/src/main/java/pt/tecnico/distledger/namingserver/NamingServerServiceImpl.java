@@ -17,6 +17,9 @@ import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServer.DeleteRe
 import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServerServiceGrpc;
 import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServerServiceGrpc.NamingServerServiceImplBase;
 
+import io.grpc.StatusRuntimeException;
+import static io.grpc.Status.ALREADY_EXISTS;;
+
 public class NamingServerServiceImpl extends NamingServerServiceGrpc.NamingServerServiceImplBase {
 
     // Private variables
@@ -50,6 +53,13 @@ public class NamingServerServiceImpl extends NamingServerServiceGrpc.NamingServe
                 serviceEntry = new ServiceEntry(serviceName);
             } else {
                 serviceEntry = namingServer.getServicesMap().get(serviceName);
+            }
+
+            for (ServerEntry serverEntry : serviceEntry.getServiceEntriesList()) {
+                if (serverEntry.getPort().equals(address[1]) && serverEntry.getHost().equals(address[0])) {
+                    responseObserver.onError(ALREADY_EXISTS.withDescription("Server already exists").asRuntimeException());
+                    return;
+                }
             }
 
             // Create the service entry and register

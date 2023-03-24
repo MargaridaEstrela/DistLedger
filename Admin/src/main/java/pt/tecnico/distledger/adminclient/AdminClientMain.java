@@ -3,7 +3,7 @@ package pt.tecnico.distledger.adminclient;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import pt.tecnico.distledger.adminclient.grpc.AdminService;
-import pt.ulisboa.tecnico.distledger.contract.admin.AdminServiceGrpc;
+import pt.ulisboa.tecnico.distledger.contract.namingserver.*;
 
 public class AdminClientMain {
 
@@ -48,7 +48,7 @@ public class AdminClientMain {
         // It is up to the client to determine whether to block the call.
 		// Here we create a blocking stub, but an async stub,
 		// or an async stub with Future are always possible.
-        AdminServiceGrpc.AdminServiceBlockingStub stub = AdminServiceGrpc.newBlockingStub(channel);
+        NamingServerServiceGrpc.NamingServerServiceBlockingStub stub = NamingServerServiceGrpc.newBlockingStub(channel);
 
         CommandParser parser = new CommandParser(new AdminService(stub));
         parser.parseInput();

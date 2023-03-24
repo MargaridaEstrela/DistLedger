@@ -23,11 +23,11 @@ import java.util.List;
 public class AdminService {
 
     // Private variables
-    private AdminServiceGrpc.AdminServiceBlockingStub stub;
+    private NamingServerServiceGrpc.NamingServerServiceBlockingStub stub;
     private ResponseCode code;
 
     // Constructor
-    public AdminService(AdminServiceGrpc.AdminServiceBlockingStub stub) {
+    public AdminService(NamingServerServiceGrpc.NamingServerServiceBlockingStub stub) {
         this.stub = stub;
         this.code = ResponseCode.UNRECOGNIZED;
     }
@@ -45,6 +45,8 @@ public class AdminService {
 
             ActivateRequest activateRequest = ActivateRequest.newBuilder().build();
             ActivateResponse activateResponse = stub.activate(activateRequest);
+
+            channel.shutdownNow();
 
             ResponseCode code = activateResponse.getCode();
             
@@ -76,6 +78,8 @@ public class AdminService {
             DeactivateRequest deactivateRequest = DeactivateRequest.newBuilder().build();
             DeactivateResponse deactivateResponse = stub.deactivate(deactivateRequest);
 
+            channel.shutdownNow();
+
             ResponseCode code = deactivateResponse.getCode();
 
             // Debug message
@@ -104,6 +108,8 @@ public class AdminService {
 
             getLedgerStateRequest request = getLedgerStateRequest.newBuilder().build();
             getLedgerStateResponse response = stub.getLedgerState(request);
+
+            channel.shutdownNow();
 
             ResponseCode code = response.getCode();
             LedgerState ledgerState = response.getLedgerState();
@@ -135,14 +141,9 @@ public class AdminService {
         List<String> res = new ArrayList<String>();
 
         try {
-            final String host = "localhost";
-            final int namingServerPort = 5001;
-            final String target = host + ":" + namingServerPort;
-            final ManagedChannel channel = ManagedChannelBuilder.forTarget(target).usePlaintext().build();
-            NamingServerServiceGrpc.NamingServerServiceBlockingStub stub2 = NamingServerServiceGrpc.newBlockingStub(channel);
-
             LookupRequest lookupRequest = LookupRequest.newBuilder().setServiceName(serviceName).setType(type).build();
-            LookupResponse lookupResponse = stub2.lookup(lookupRequest);
+            LookupResponse lookupResponse = stub.lookup(lookupRequest);
+
             
             for (String server : lookupResponse.getServersList()) {
                 res.add(server);
