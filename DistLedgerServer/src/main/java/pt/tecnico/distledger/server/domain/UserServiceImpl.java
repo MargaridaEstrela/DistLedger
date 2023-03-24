@@ -100,26 +100,28 @@ public class UserServiceImpl extends UserServiceImplBase {
             return;
         }
 
-        //Check if account already exists
-        if(server.existsAccount(request.getUserId())) {
-            code = USER_ALREADY_EXISTS;
-        }
-        else {
-            //Add/Create account
-            server.addAccount(request.getUserId());
+        synchronized(server) {
+            //Check if account already exists
+            if(server.existsAccount(request.getUserId())) {
+                code = USER_ALREADY_EXISTS;
+            }
+            else {
+                //Add/Create account
+                server.addAccount(request.getUserId());
 
-            //try to propagate the changes to the server B
-            if(propagate() < 0) {   //-1 in case of failure
-                //remove the account created
-                server.removeAccount(request.getUserId());
+                //try to propagate the changes to the server B
+                if(propagate() < 0) {   //-1 in case of failure
+                    //remove the account created
+                    server.removeAccount(request.getUserId());
 
-                //Rollback the createAccount operation and the deleteAccount used to rollback the changes
-                server.removeOperation();
-                server.removeOperation();
+                    //Rollback the createAccount operation and the deleteAccount used to rollback the changes
+                    server.removeOperation();
+                    server.removeOperation();
 
-                //server B is unavailable
-                responseObserver.onError(UNAVAILABLE.withDescription("Server is Unavailable").asRuntimeException());
-                return;
+                    //server B is unavailable
+                    responseObserver.onError(UNAVAILABLE.withDescription("Server is Unavailable").asRuntimeException());
+                    return;
+                }
             }
         }
 
@@ -156,36 +158,31 @@ public class UserServiceImpl extends UserServiceImplBase {
             return;
         }
 
-        //account to be deleted, used only for the synchronization
-        Account account = server.getAccount(request.getUserId());
-
-        //check if account exists
-        if(account == null) {
-            code = NON_EXISTING_USER;
-        }
-        else{
-            synchronized(account) {
-                //check if the account still exists. In order to prevent a case where an account was deleted between the getter and the synchronization
-                if(!server.existsAccount(request.getUserId())) {
-                    code = NON_EXISTING_USER;
-                }
+        synchronized(server) {
+            //check if the account still exists.
+            if(!server.existsAccount(request.getUserId())) {
+                code = NON_EXISTING_USER;
+            }
+            else {
+                //account to be deleted, used only for the synchronization
+                Account account = server.getAccount(request.getUserId());
                 //check if there is money on the account
-                else if(server.hasMoney(request.getUserId())) {
+                if(server.hasMoney(request.getUserId())) {
                     code = AMOUNT_NOT_SUPORTED;
                 }
                 else {
                     //remove account
                     server.removeAccount(request.getUserId());
-
+    
                     //propagate the changes to the server B
                     if(propagate() < 0) {   //-1 if error on server B
                         //Rollback the changes by recreating the account deleted
                         server.addAccount(request.getUserId());
-
+    
                         //Rollback the createAccount operation and the deleteAccount used to rollback the changes
                         server.removeOperation();
                         server.removeOperation();
-
+    
                         //Server B is unavailable so the operation can not be performed
                         responseObserver.onError(UNAVAILABLE.withDescription("Server is Unavailable").asRuntimeException());
                         return;
@@ -227,42 +224,36 @@ public class UserServiceImpl extends UserServiceImplBase {
             return;
         }
 
-        //accounts for the synchronization
-        Account accountTo = server.getAccount(request.getAccountTo());
-        Account accountFrom = server.getAccount(request.getAccountFrom());
+        synchronized(server) {
+            //check if the accounts still exist
+            if(!server.existsAccount(request.getAccountTo()) || !server.existsAccount(request.getAccountFrom())) {
+                code = NON_EXISTING_USER;
+            }
+            else {
+                //accounts for the synchronization
+                Account accountTo = server.getAccount(request.getAccountTo());
+                Account accountFrom = server.getAccount(request.getAccountFrom());
 
-        if(accountTo == null || accountFrom == null) {
-            code = NON_EXISTING_USER;
-        }
-        else{
-            synchronized(accountFrom){
-                synchronized(accountTo){
-                    //check if the accounts still exist
-                    if(!server.existsAccount(request.getAccountTo()) || !server.existsAccount(request.getAccountFrom())) {
-                        code = NON_EXISTING_USER;
-                    }
-                    //check if the amount from has enought money for the trasnsaction
-                    else if(!server.hasMoney(request.getAccountFrom(), request.getAmount()) || !(request.getAmount() > 0)) {
-                        code = AMOUNT_NOT_SUPORTED;
-                    }
-                    else {
-                        //execute the operation
-                        server.transferTo(request.getAccountFrom(), request.getAccountTo(), request.getAmount());
+                //check if the amount from has enought money for the trasnsaction
+                if(!server.hasMoney(request.getAccountFrom(), request.getAmount()) || !(request.getAmount() > 0)) {
+                    code = AMOUNT_NOT_SUPORTED;
+                }
+                else {
+                    //execute the operation
+                    server.transferTo(request.getAccountFrom(), request.getAccountTo(), request.getAmount());
 
-                        //propagate the new state
-                        if(propagate() < 0) {   //-1 if failure on the B server
-                            //Rolback the transferTo Operation
-                            server.transferTo(request.getAccountTo(), request.getAccountFrom(), request.getAmount());
+                    //propagate the new state
+                    if(propagate() < 0) {   //-1 if failure on the B server
+                        //Rolback the transferTo Operation
+                        server.transferTo(request.getAccountTo(), request.getAccountFrom(), request.getAmount());
 
-                            //Rollback the createAccount operation and the deleteAccount used to rollback the changes
-                            server.removeOperation();
-                            server.removeOperation();
+                        //Rollback the createAccount operation and the deleteAccount used to rollback the changes
+                        server.removeOperation();
+                        server.removeOperation();
 
-                            //Server B is unavailable so the operation can not be performed
-                            responseObserver.onError(UNAVAILABLE.withDescription("Server is Unavailable").asRuntimeException());
-                            return;
-                        }
-                    }
+                        //Server B is unavailable so the operation can not be performed
+                        responseObserver.onError(UNAVAILABLE.withDescription("Server is Unavailable").asRuntimeException());
+                        return;
                 }
             }
         }

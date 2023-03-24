@@ -44,18 +44,20 @@ public class NamingServerServiceImpl extends NamingServerServiceGrpc.NamingServe
         String serviceName = request.getService();
         String type = request.getType();
         String[] address = request.getAddress().split(":");
+        synchronized(namingServer) {
+            // Check if service name is already registered
+            if (!namingServer.getServicesMap().containsKey(serviceName)) {
+                serviceEntry = new ServiceEntry(serviceName);
+            } else {
+                serviceEntry = namingServer.getServicesMap().get(serviceName);
+            }
 
-        // Check if service name is already registered
-        if (!namingServer.getServicesMap().containsKey(serviceName)) {
-            serviceEntry = new ServiceEntry(serviceName);
-        } else {
-            serviceEntry = namingServer.getServicesMap().get(serviceName);
+            // Create the service entry and register
+            ServerEntry serverEntry = new ServerEntry(address[0], type, address[1]);
+            serviceEntry.addServerEntry(serverEntry);
+            namingServer.addServerName(serviceName, serviceEntry);
         }
 
-        // Create the service entry and register
-        ServerEntry serverEntry = new ServerEntry(address[0], type, address[1]);
-        serviceEntry.addServerEntry(serverEntry);
-        namingServer.addServerName(serviceName, serviceEntry);
 
         response = RegisterResponse.getDefaultInstance();
         responseObserver.onNext(response);
@@ -83,21 +85,23 @@ public class NamingServerServiceImpl extends NamingServerServiceGrpc.NamingServe
         LookupResponse.Builder response = LookupResponse.newBuilder();
         String server;
 
-        // Given a service name and a type, return all the servers
-        if (namingServer.getServicesMap().containsKey(serviceName)) {
-            for (ServiceEntry serviceEntry : namingServer.getServicesMap().values()) {
-                if (serviceEntry.getServiceName().equals(serviceName)) {
-                    for (ServerEntry serverEntry : serviceEntry.getServiceEntriesList()) {
-                        if (serverEntry.getType().equals(type)) {
-                            server = serverEntry.getHost() + ":" + serverEntry.getPort();
-                            response.addServers(server);
-                        }
-                    }
-                    // If no servers match the type, return all the servers
-                    if (response.getServersList().size() == 0) {
+        synchronized(namingServer) {
+            // Given a service name and a type, return all the servers
+            if (namingServer.getServicesMap().containsKey(serviceName)) {
+                for (ServiceEntry serviceEntry : namingServer.getServicesMap().values()) {
+                    if (serviceEntry.getServiceName().equals(serviceName)) {
                         for (ServerEntry serverEntry : serviceEntry.getServiceEntriesList()) {
-                            server = serverEntry.getHost() + ":" + serverEntry.getPort();
-                            response.addServers(server);
+                            if (serverEntry.getType().equals(type)) {
+                                server = serverEntry.getHost() + ":" + serverEntry.getPort();
+                                response.addServers(server);
+                            }
+                        }
+                        // If no servers match the type, return all the servers
+                        if (response.getServersList().size() == 0) {
+                            for (ServerEntry serverEntry : serviceEntry.getServiceEntriesList()) {
+                                server = serverEntry.getHost() + ":" + serverEntry.getPort();
+                                response.addServers(server);
+                            }
                         }
                     }
                 }
@@ -130,20 +134,22 @@ public class NamingServerServiceImpl extends NamingServerServiceGrpc.NamingServe
         String serviceName = request.getService();
         String[] address = request.getAddress().split(":");
 
-        // Check if service name is already registered
-        if (namingServer.getServicesMap().containsKey(serviceName)) {
-            for (ServerEntry serverEntry : namingServer.getServicesMap().get(serviceName).getServiceEntriesList()) {
-                if (serverEntry.getHost().equals(address[0]) && serverEntry.getPort().equals(address[1])) {
-                    toDelete.add(serverEntry);
+        synchronized(namingServer) {
+            // Check if service name is already registered
+            if (namingServer.getServicesMap().containsKey(serviceName)) {
+                for (ServerEntry serverEntry : namingServer.getServicesMap().get(serviceName).getServiceEntriesList()) {
+                    if (serverEntry.getHost().equals(address[0]) && serverEntry.getPort().equals(address[1])) {
+                        toDelete.add(serverEntry);
+                    }
                 }
             }
-        }
 
-        // Check if service name is already registered
-        toDelete.forEach(serverEntry -> namingServer.getServicesMap().get(serviceName).getServiceEntriesList()
-                .remove(serverEntry));
-        if (namingServer.getServicesMap().get(serviceName).getServiceEntriesList().size() == 0) {
-            namingServer.getServicesMap().remove(serviceName);
+            // Check if service name is already registered
+            toDelete.forEach(serverEntry -> namingServer.getServicesMap().get(serviceName).getServiceEntriesList()
+                    .remove(serverEntry));
+            if (namingServer.getServicesMap().get(serviceName).getServiceEntriesList().size() == 0) {
+                namingServer.getServicesMap().remove(serviceName);
+            }
         }
 
         response = DeleteResponse.getDefaultInstance();

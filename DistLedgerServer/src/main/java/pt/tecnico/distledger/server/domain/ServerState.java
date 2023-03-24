@@ -57,10 +57,8 @@ public class ServerState {
     //Create a new account and add it to the Server
     public void addAccount (String AccountId) {
         Account account = new Account(AccountId, 0);
-        synchronized(account) {
-            this.getAccounts().put(account.getId(),account);
-            this.addOperation(new CreateOp(account.getId()));
-        }
+        this.getAccounts().put(account.getId(),account);
+        this.addOperation(new CreateOp(account.getId()));
     }
 
     //Add an Operation to the ledger

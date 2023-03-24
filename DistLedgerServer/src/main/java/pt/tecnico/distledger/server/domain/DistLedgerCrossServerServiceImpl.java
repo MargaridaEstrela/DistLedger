@@ -50,8 +50,10 @@ public class DistLedgerCrossServerServiceImpl extends DistLedgerCrossServerServi
         //Read the operations and create an Operation object corresponing to the operation type
         request.getState().getLedgerList().forEach(op -> addOperation(ledger, op));
 
-        //update the server with the new ledger
-        server.update(ledger);
+        synchronized(server) {
+            //update the server with the new ledger
+            server.update(ledger);
+        }
 
         //send response
         PropagateStateResponse response = PropagateStateResponse.newBuilder().build();
