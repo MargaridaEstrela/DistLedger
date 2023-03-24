@@ -59,6 +59,10 @@ public class NamingServer {
 
         final int port = 5001;
         NamingServer namingServer = new NamingServer();
+        if(args[0].equals("-debug")) {
+            debugFlag = true;
+        }
+
         
         final BindableService namingServerServiceImpl = new NamingServerServiceImpl(namingServer);
 

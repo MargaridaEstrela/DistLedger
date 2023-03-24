@@ -36,6 +36,10 @@ public class UserClientMain {
             return;
         } 
 
+        if(args[2].equals("-debug")) {
+            debugFlag = true;
+        }
+
         final String host = args[0];
         final int port = Integer.parseInt(args[1]);
         final String target = host + ":" + port;

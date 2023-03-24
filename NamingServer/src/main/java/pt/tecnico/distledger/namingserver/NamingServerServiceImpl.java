@@ -4,27 +4,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 import io.grpc.stub.StreamObserver;
-import pt.tecnico.distledger.namingserver.NamingServer;
-import pt.tecnico.distledger.namingserver.ServerEntry;
-import pt.tecnico.distledger.namingserver.ServiceEntry;
 import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServer.RegisterRequest;
 import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServer.RegisterResponse;
 import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServer.LookupRequest;
 import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServer.LookupResponse;
 import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServer.DeleteRequest;
 import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServer.DeleteResponse;
-
 import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServerServiceGrpc;
-import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServerServiceGrpc.NamingServerServiceImplBase;
-
-import io.grpc.StatusRuntimeException;
 import static io.grpc.Status.ALREADY_EXISTS;;
 
 public class NamingServerServiceImpl extends NamingServerServiceGrpc.NamingServerServiceImplBase {
 
     // Private variables
     private NamingServer namingServer;
-    private boolean debugFlag;
 
     // Constructor
     public NamingServerServiceImpl(NamingServer namingServer) {
@@ -37,9 +29,8 @@ public class NamingServerServiceImpl extends NamingServerServiceGrpc.NamingServe
     public void register(RegisterRequest request, StreamObserver<RegisterResponse> responseObserver) {
 
         // Debug message
-        if (this.debugFlag) {
-            namingServer.debug("Register service: started");
-        }
+        NamingServer.debug("Register service: started");
+        
         ServiceEntry serviceEntry;
 
         // Register a request to register
@@ -74,9 +65,7 @@ public class NamingServerServiceImpl extends NamingServerServiceGrpc.NamingServe
         responseObserver.onCompleted();
 
         // Debug message
-        if (this.debugFlag) {
-            namingServer.debug("Register service: ended");
-        }
+        NamingServer.debug("Register service: ended");
     }
 
     // To lookup to a service name with a specified type. Returns null if no such
@@ -85,9 +74,7 @@ public class NamingServerServiceImpl extends NamingServerServiceGrpc.NamingServe
     @Override
     public void lookup(LookupRequest request, StreamObserver<LookupResponse> responseObserver) {
         // Debug message
-        if (this.debugFlag) {
-            namingServer.debug("Received lookup request");
-        }
+        NamingServer.debug("Received lookup request");
 
         String serviceName = request.getServiceName();
         String type = request.getType();
@@ -122,9 +109,7 @@ public class NamingServerServiceImpl extends NamingServerServiceGrpc.NamingServe
         responseObserver.onCompleted();
 
         // Debug message
-        if (this.debugFlag) {
-            namingServer.debug("Ended lookup request");
-        }
+        NamingServer.debug("Ended lookup request");
 
     }
 
@@ -132,12 +117,8 @@ public class NamingServerServiceImpl extends NamingServerServiceGrpc.NamingServe
     @Override
     public void delete(DeleteRequest request, StreamObserver<DeleteResponse> responseObserver) {
 
-        System.out.println("hi\n");
-
         // Debug message
-        if (this.debugFlag) {
-            namingServer.debug("Received delete request");
-        }
+        NamingServer.debug("Received delete request");
 
         List<ServerEntry> toDelete = new ArrayList<ServerEntry>();
         DeleteResponse response;
@@ -167,9 +148,6 @@ public class NamingServerServiceImpl extends NamingServerServiceGrpc.NamingServe
         responseObserver.onCompleted();
 
         // Debug message
-        if (this.debugFlag) {
-            namingServer.debug("Ended delete request");
-        }
+        NamingServer.debug("Ended delete request");
     }
-
 }

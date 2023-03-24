@@ -48,7 +48,7 @@ public class ServerMain {
 
 		//Check debug
 		if(args.length >= 3) {
-			if (args[2] == "-debug") {
+			if (args[2].equals("-debug")) {
 				debugFlag = true;
 			}
 		}
