@@ -49,6 +49,13 @@ To compile and install all modules:
 mvn clean install
 ```
 
+### To Run:
+
+A Naming server: mvn compile exec:java
+A Admin: mvn compile exec:java
+A User: mvn compile exec:java
+A Naming server: mvn compile exec:java -Dexec.args="<port> <server type>"
+
 ## Built With
 
 * [Maven](https://maven.apache.org/) - Build and dependency management tool;
