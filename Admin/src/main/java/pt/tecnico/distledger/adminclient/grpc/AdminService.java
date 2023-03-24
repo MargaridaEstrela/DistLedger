@@ -11,15 +11,23 @@ import pt.ulisboa.tecnico.distledger.contract.admin.AdminDistLedger.DeactivateRe
 import pt.ulisboa.tecnico.distledger.contract.admin.AdminDistLedger.DeactivateResponse;
 import pt.ulisboa.tecnico.distledger.contract.admin.AdminDistLedger.getLedgerStateRequest;
 import pt.ulisboa.tecnico.distledger.contract.admin.AdminDistLedger.getLedgerStateResponse;
+import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServer.LookupRequest;
+import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServer.LookupResponse;
+import pt.ulisboa.tecnico.distledger.contract.namingserver.*;
+import io.grpc.ManagedChannel;
+import io.grpc.ManagedChannelBuilder;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class AdminService {
 
     // Private variables
-    private AdminServiceGrpc.AdminServiceBlockingStub stub;
+    private NamingServerServiceGrpc.NamingServerServiceBlockingStub stub;
     private ResponseCode code;
 
     // Constructor
-    public AdminService(AdminServiceGrpc.AdminServiceBlockingStub stub) {
+    public AdminService(NamingServerServiceGrpc.NamingServerServiceBlockingStub stub) {
         this.stub = stub;
         this.code = ResponseCode.UNRECOGNIZED;
     }
@@ -32,8 +40,13 @@ public class AdminService {
     // Activate the AdminClient. Returns a ResponseCode.
     public ResponseCode activate(String server){
         try {
+            final ManagedChannel channel = ManagedChannelBuilder.forTarget(lookup("DistLedger", server).get(0)).usePlaintext().build();
+            AdminServiceGrpc.AdminServiceBlockingStub stub = AdminServiceGrpc.newBlockingStub(channel);
+
             ActivateRequest activateRequest = ActivateRequest.newBuilder().build();
-            ActivateResponse activateResponse = this.stub.activate(activateRequest);
+            ActivateResponse activateResponse = stub.activate(activateRequest);
+
+            channel.shutdownNow();
 
             ResponseCode code = activateResponse.getCode();
             
@@ -59,8 +72,13 @@ public class AdminService {
     // Deactivate the AdminClient. Returns a ResponseCode.
     public ResponseCode deactivate(String server){
         try {
+            final ManagedChannel channel = ManagedChannelBuilder.forTarget(lookup("DistLedger", server).get(0)).usePlaintext().build();
+            AdminServiceGrpc.AdminServiceBlockingStub stub = AdminServiceGrpc.newBlockingStub(channel);
+
             DeactivateRequest deactivateRequest = DeactivateRequest.newBuilder().build();
-            DeactivateResponse deactivateResponse = this.stub.deactivate(deactivateRequest);
+            DeactivateResponse deactivateResponse = stub.deactivate(deactivateRequest);
+
+            channel.shutdownNow();
 
             ResponseCode code = deactivateResponse.getCode();
 
@@ -85,8 +103,13 @@ public class AdminService {
 
     public void dump(String server){
         try {
+            final ManagedChannel channel = ManagedChannelBuilder.forTarget(lookup("DistLedger", server).get(0)).usePlaintext().build();
+            AdminServiceGrpc.AdminServiceBlockingStub stub = AdminServiceGrpc.newBlockingStub(channel);
+
             getLedgerStateRequest request = getLedgerStateRequest.newBuilder().build();
-            getLedgerStateResponse response = this.stub.getLedgerState(request);
+            getLedgerStateResponse response = stub.getLedgerState(request);
+
+            channel.shutdownNow();
 
             ResponseCode code = response.getCode();
             LedgerState ledgerState = response.getLedgerState();
@@ -105,6 +128,37 @@ public class AdminService {
             System.out.println("Caught exception with description: " +
                     e.getStatus().getDescription());
         }
+    }
+
+    /*
+     * To lookup all servers associated with a service. Returns the list of servers
+     * for the type requested.
+     * If none type had been requested, returns all the servers of the service. If
+     * one of them doesn't exist, returns an empty list.
+     */
+    public List<String> lookup(String serviceName, String type) {
+
+        List<String> res = new ArrayList<String>();
+
+        try {
+            LookupRequest lookupRequest = LookupRequest.newBuilder().setServiceName(serviceName).setType(type).build();
+            LookupResponse lookupResponse = stub.lookup(lookupRequest);
+
+            
+            for (String server : lookupResponse.getServersList()) {
+                res.add(server);
+            }
+
+        } catch (StatusRuntimeException e) {
+            // Debug message
+            AdminClientMain.debug("Server " + serviceName + " is unreachable");
+
+            System.out.println("Caught exception with description: " +
+                    e.getStatus().getDescription());
+        }
+
+        return res;
+
     }
 
 }

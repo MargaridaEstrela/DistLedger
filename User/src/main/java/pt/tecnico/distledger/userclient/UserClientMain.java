@@ -3,7 +3,7 @@ package pt.tecnico.distledger.userclient;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import pt.tecnico.distledger.userclient.grpc.UserService;
-import pt.ulisboa.tecnico.distledger.contract.user.UserServiceGrpc;
+import pt.ulisboa.tecnico.distledger.contract.namingserver.*;
 
 public class UserClientMain {
 
@@ -30,14 +30,20 @@ public class UserClientMain {
         }
 
         // check arguments
-        if (args.length != 2 && args.length != 3) {
+        if (args.length != 0 && args.length != 1) {
             System.err.println("Argument(s) missing!");
-            System.err.println("Usage: mvn exec:java -Dexec.args=<host> <port>");
+            System.err.println("Usage: mvn exec:java -Dexec.args=<-debug>");
             return;
         } 
 
-        final String host = args[0];
-        final int port = Integer.parseInt(args[1]);
+        if(args.length > 0) {
+            if(args[0].equals("-debug")) {
+                debugFlag = true;
+            }
+        }
+
+        final String host = "localhost";
+        final int port = 5001;
         final String target = host + ":" + port;
 		debug("Target: " + target);
 
@@ -48,7 +54,7 @@ public class UserClientMain {
 		// It is up to the client to determine whether to block the call.
 		// Here we create a blocking stub, but an async stub,
 		// or an async stub with Future are always possible.
-		UserServiceGrpc.UserServiceBlockingStub stub = UserServiceGrpc.newBlockingStub(channel);
+		NamingServerServiceGrpc.NamingServerServiceBlockingStub stub = NamingServerServiceGrpc.newBlockingStub(channel);
 
         CommandParser parser = new CommandParser(new UserService(stub));
         parser.parseInput();

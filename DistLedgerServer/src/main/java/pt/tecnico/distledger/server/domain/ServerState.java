@@ -57,10 +57,8 @@ public class ServerState {
     //Create a new account and add it to the Server
     public void addAccount (String AccountId) {
         Account account = new Account(AccountId, 0);
-        synchronized(account) {
-            this.getAccounts().put(account.getId(),account);
-            this.addOperation(new CreateOp(account.getId()));
-        }
+        this.getAccounts().put(account.getId(),account);
+        this.addOperation(new CreateOp(account.getId()));
     }
 
     //Add an Operation to the ledger
@@ -105,5 +103,37 @@ public class ServerState {
 
     public String getOperationType (Operation operation) {
         return operation.getType();
+    }
+
+    //Execute an operation
+    private void executeOperation (Operation operation) {
+        //Get the type of operation and execute it
+        if(operation.getType() == "CREATE") {
+            addAccount(operation.getAccount());
+        }
+        else if(operation.getType() == "DELETE") {
+            removeAccount(operation.getAccount());
+        }
+        else if(operation.getType() == "TRANSFER") {
+            TransferOp transferOperation = (TransferOp) operation;  
+            transferTo(transferOperation.getAccount(), transferOperation.getDestAccount(), transferOperation.getAmount());
+        }
+    }
+
+    //Update the ledger with new operations
+    public void update (List<Operation> operations) {
+        //ArrayList of new ledger
+        ArrayList<Operation> newLedger = new ArrayList<Operation> (operations);
+
+        //select only the new operations
+        List<Operation> ledger = newLedger.subList(this.getLedger().size(), newLedger.size());
+
+        //call executeOperation method on each opeartion
+        ledger.forEach(operation -> executeOperation(operation));
+    }
+
+    //Remove the last operation (used in case of rollback)
+    public void removeOperation() {
+        this.getLedger().remove(this.getLedger().size()-1);
     }
 }

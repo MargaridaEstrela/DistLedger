@@ -69,6 +69,7 @@ public class CommandParser {
                 System.err.println(e.getMessage());
             }
         }
+        scanner.close();
     }
 
     // To print the create account command usage
@@ -156,6 +157,7 @@ public class CommandParser {
             case NON_EXISTING_USER : return "NON EXISTING USER";
             case USER_ALREADY_EXISTS : return "USER ALREADY EXISTS";
             case AMOUNT_NOT_SUPORTED : return "AMOUNT NOT SUPPORTED";
+            case UNRECOGNIZED : return "UNRECOGNIZED ERROR";
         }
 
         return "UNAVAILABLE SERVER";

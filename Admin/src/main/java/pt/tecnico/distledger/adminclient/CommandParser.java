@@ -64,6 +64,7 @@ public class CommandParser {
             }
 
         }
+        scanner.close();
     }
 
     // To print the activate command usage
@@ -112,6 +113,7 @@ public class CommandParser {
     public static String formatToString(ResponseCode code) {
         switch(code) {
             case OK : return "OK";
+            case UNRECOGNIZED : return "UNRECOGNIZED ERROR";
         }
 
         return "UNAVAILABLE SERVER";

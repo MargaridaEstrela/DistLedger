@@ -21,8 +21,8 @@
 		<version.exec-maven-plugin>3.0.0</version.exec-maven-plugin>
 
 		<mainclass>pt.tecnico.distledger.userclient.UserClientMain</mainclass>
-		<server.host>localhost</server.host>
-		<server.port>2001</server.port>
+		<!-- <server.host>localhost</server.host>
+		<server.port>2001</server.port> -->
 
 	</properties>
 
@@ -68,10 +68,6 @@
 				</executions>
 				<configuration>
 					<mainClass>${mainclass}</mainClass>
-					<arguments>
-						<argument>${server.host}</argument>
-						<argument>${server.port}</argument>
-					</arguments>
 				</configuration>
 			</plugin>
 		</plugins>
