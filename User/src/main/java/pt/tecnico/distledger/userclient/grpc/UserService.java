@@ -42,8 +42,8 @@ public class UserService {
     // To create a new account. Returns a ResponseCode
     public ResponseCode createAccount(String server, String username) {
 
+        final ManagedChannel channel = ManagedChannelBuilder.forTarget(lookup("DistLedger", server).get(0)).usePlaintext().build();
         try {
-            final ManagedChannel channel = ManagedChannelBuilder.forTarget(lookup("DistLedger", server).get(0)).usePlaintext().build();
             UserServiceGrpc.UserServiceBlockingStub stub = UserServiceGrpc.newBlockingStub(channel);
 
 
@@ -64,6 +64,7 @@ public class UserService {
             return code;
 
         } catch (StatusRuntimeException e) {
+            channel.shutdownNow();
             // Debug message
             UserClientMain.debug("Server " + server + " is unreachable");
 
@@ -79,8 +80,8 @@ public class UserService {
     // To delete the user account. Returns a ResponseCode
     public ResponseCode deleteAccount(String server, String username) {
 
+        final ManagedChannel channel = ManagedChannelBuilder.forTarget(lookup("DistLedger", server).get(0)).usePlaintext().build();
         try {
-            final ManagedChannel channel = ManagedChannelBuilder.forTarget(lookup("DistLedger", server).get(0)).usePlaintext().build();
             UserServiceGrpc.UserServiceBlockingStub stub = UserServiceGrpc.newBlockingStub(channel);
 
             DeleteAccountRequest deleteAccRequest = DeleteAccountRequest.newBuilder().setUserId(username).build();
@@ -100,6 +101,7 @@ public class UserService {
             return code;
 
         } catch (StatusRuntimeException e) {
+            channel.shutdownNow();
             // Debug message
             UserClientMain.debug("Server " + server + " is unreachable");
 
@@ -143,6 +145,7 @@ public class UserService {
             return res;
 
         } catch (StatusRuntimeException e) {
+            channel.shutdownNow();
             // Debug message
             UserClientMain.debug("Server " + server + " is unreachable");
 
@@ -159,9 +162,8 @@ public class UserService {
 
     // To transfer money from one account to another. Returns a ResponseCode
     public ResponseCode transferTo(String server, String from, String dest, Integer amount) {
-
+        final ManagedChannel channel = ManagedChannelBuilder.forTarget(lookup("DistLedger", server).get(0)).usePlaintext().build();
         try {
-            final ManagedChannel channel = ManagedChannelBuilder.forTarget(lookup("DistLedger", server).get(0)).usePlaintext().build();
             UserServiceGrpc.UserServiceBlockingStub stub = UserServiceGrpc.newBlockingStub(channel);
 
             TransferToRequest transferToRequest = TransferToRequest.newBuilder().setAccountFrom(from).setAccountTo(dest)
@@ -185,6 +187,7 @@ public class UserService {
             return code;
 
         } catch (StatusRuntimeException e) {
+            channel.shutdownNow();
             // Debug message
             UserClientMain.debug("Server " + server + " is unreachable");
 

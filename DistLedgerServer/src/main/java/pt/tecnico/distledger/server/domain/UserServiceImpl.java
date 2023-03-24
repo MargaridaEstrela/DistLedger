@@ -95,7 +95,7 @@ public class UserServiceImpl extends UserServiceImplBase {
 
         //Check if this operation can be performed on this server
         if (!this.type.equals("A")) {
-            responseObserver.onError(UNAVAILABLE.withDescription("Server is Unavailable").asRuntimeException());
+            responseObserver.onError(UNAVAILABLE.withDescription("This server is not allowed to execute this operation").asRuntimeException());
             return;
         }
 
@@ -153,7 +153,7 @@ public class UserServiceImpl extends UserServiceImplBase {
 
         //Check if this operation can be performed on this server
         if (!this.type.equals("A")) {
-            responseObserver.onError(UNAVAILABLE.withDescription("Server is Unavailable").asRuntimeException());
+            responseObserver.onError(UNAVAILABLE.withDescription("This server is not allowed to execute this operation").asRuntimeException());
             return;
         }
 
@@ -217,7 +217,7 @@ public class UserServiceImpl extends UserServiceImplBase {
 
         //Check if this operation can be performed on this server
         if (!this.type.equals("A")) {
-            responseObserver.onError(UNAVAILABLE.withDescription("Server is Unavailable").asRuntimeException());
+            responseObserver.onError(UNAVAILABLE.withDescription("This server is not allowed to execute this operation").asRuntimeException());
             return;
         }
 
@@ -340,9 +340,9 @@ public class UserServiceImpl extends UserServiceImplBase {
         //propagate to all B servers
         for (String address : addresses) {
 
+            final ManagedChannel channel = ManagedChannelBuilder.forTarget(address).usePlaintext().build();
             //Try to propagate to all server if unavailable return -1 else return 0
             try {
-                final ManagedChannel channel = ManagedChannelBuilder.forTarget(address).usePlaintext().build();
                 DistLedgerCrossServerServiceGrpc.DistLedgerCrossServerServiceBlockingStub stub = DistLedgerCrossServerServiceGrpc.newBlockingStub(channel);
 
                 PropagateStateResponse response = stub.propagateState(request);
@@ -351,6 +351,7 @@ public class UserServiceImpl extends UserServiceImplBase {
             }
 
             catch (StatusRuntimeException e) {
+                channel.shutdown();
                 return -1;
             }
         }
