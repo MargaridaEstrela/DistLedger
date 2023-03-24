@@ -36,8 +36,10 @@ public class AdminClientMain {
             return;
         } 
 
-        if(args[0].equals("-debug")) {
-            debugFlag = true;
+        if(args.length > 0) {
+            if(args[0].equals("-debug")) {
+                debugFlag = true;
+            }
         }
 
         final String host = "localhost";
