@@ -30,18 +30,18 @@ public class UserClientMain {
         }
 
         // check arguments
-        if (args.length != 2 && args.length != 3) {
+        if (args.length != 0 && args.length != 1) {
             System.err.println("Argument(s) missing!");
-            System.err.println("Usage: mvn exec:java -Dexec.args=<host> <port>");
+            System.err.println("Usage: mvn exec:java -Dexec.args=<-debug>");
             return;
         } 
 
-        if(args[2].equals("-debug")) {
+        if(args[0].equals("-debug")) {
             debugFlag = true;
         }
 
-        final String host = args[0];
-        final int port = Integer.parseInt(args[1]);
+        final String host = "localhost";
+        final int port = 5001;
         final String target = host + ":" + port;
 		debug("Target: " + target);
 
