@@ -346,6 +346,8 @@ public class UserServiceImpl extends UserServiceImplBase {
                 DistLedgerCrossServerServiceGrpc.DistLedgerCrossServerServiceBlockingStub stub = DistLedgerCrossServerServiceGrpc.newBlockingStub(channel);
 
                 PropagateStateResponse response = stub.propagateState(request);
+
+                channel.shutdown();
             }
 
             catch (StatusRuntimeException e) {

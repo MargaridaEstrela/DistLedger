@@ -11,7 +11,7 @@ import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServer.LookupRe
 import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServer.DeleteRequest;
 import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServer.DeleteResponse;
 import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServerServiceGrpc;
-import static io.grpc.Status.ALREADY_EXISTS;;
+import static io.grpc.Status.ALREADY_EXISTS;
 
 public class NamingServerServiceImpl extends NamingServerServiceGrpc.NamingServerServiceImplBase {
 
@@ -126,7 +126,7 @@ public class NamingServerServiceImpl extends NamingServerServiceGrpc.NamingServe
         String[] address = request.getAddress().split(":");
 
         synchronized(namingServer) {
-            // Check if service name is already registered
+            // Colect server to be deleted into a list
             if (namingServer.getServicesMap().containsKey(serviceName)) {
                 for (ServerEntry serverEntry : namingServer.getServicesMap().get(serviceName).getServiceEntriesList()) {
                     if (serverEntry.getHost().equals(address[0]) && serverEntry.getPort().equals(address[1])) {
@@ -135,7 +135,7 @@ public class NamingServerServiceImpl extends NamingServerServiceGrpc.NamingServe
                 }
             }
 
-            // Check if service name is already registered
+            // Remove servers in the list
             toDelete.forEach(serverEntry -> namingServer.getServicesMap().get(serviceName).getServiceEntriesList()
                     .remove(serverEntry));
             if (namingServer.getServicesMap().get(serviceName).getServiceEntriesList().size() == 0) {
