@@ -135,69 +135,69 @@ public class UserServiceImpl extends UserServiceImplBase {
         }
     }
 
-    @Override
-    public void deleteAccount(DeleteAccountRequest request, StreamObserver<DeleteAccountResponse> responseObserver) {
+    // @Override
+    // public void deleteAccount(DeleteAccountRequest request, StreamObserver<DeleteAccountResponse> responseObserver) {
 
-        //Check debug flag
-        if(debugFlag) {
-            debug("deleteAccount Request started\n");
-        }
+    //     //Check debug flag
+    //     if(debugFlag) {
+    //         debug("deleteAccount Request started\n");
+    //     }
 
-        //Check if the server is active
-        if(!server.getActivated()) {
-            responseObserver.onError(UNAVAILABLE.withDescription("Server is Unavailable").asRuntimeException());
-            return;
-        }
+    //     //Check if the server is active
+    //     if(!server.getActivated()) {
+    //         responseObserver.onError(UNAVAILABLE.withDescription("Server is Unavailable").asRuntimeException());
+    //         return;
+    //     }
 
-        ResponseCode code = OK;
+    //     ResponseCode code = OK;
 
-        //Check if this operation can be performed on this server
-        if (!this.type.equals("A")) {
-            responseObserver.onError(UNAVAILABLE.withDescription("This server is not allowed to execute this operation").asRuntimeException());
-            return;
-        }
+    //     //Check if this operation can be performed on this server
+    //     if (!this.type.equals("A")) {
+    //         responseObserver.onError(UNAVAILABLE.withDescription("This server is not allowed to execute this operation").asRuntimeException());
+    //         return;
+    //     }
 
-        synchronized(server) {
-            //check if the account still exists.
-            if(!server.existsAccount(request.getUserId())) {
-                code = NON_EXISTING_USER;
-            }
-            else {
-                //check if there is money on the account
-                if(server.hasMoney(request.getUserId())) {
-                    code = AMOUNT_NOT_SUPORTED;
-                }
-                else {
-                    //remove account
-                    server.removeAccount(request.getUserId());
+    //     synchronized(server) {
+    //         //check if the account still exists.
+    //         if(!server.existsAccount(request.getUserId())) {
+    //             code = NON_EXISTING_USER;
+    //         }
+    //         else {
+    //             //check if there is money on the account
+    //             if(server.hasMoney(request.getUserId())) {
+    //                 code = AMOUNT_NOT_SUPORTED;
+    //             }
+    //             else {
+    //                 //remove account
+    //                 server.removeAccount(request.getUserId());
     
-                    //propagate the changes to the server B
-                    if(propagate() < 0) {   //-1 if error on server B
-                        //Rollback the changes by recreating the account deleted
-                        server.addAccount(request.getUserId());
+    //                 //propagate the changes to the server B
+    //                 if(propagate() < 0) {   //-1 if error on server B
+    //                     //Rollback the changes by recreating the account deleted
+    //                     server.addAccount(request.getUserId());
     
-                        //Rollback the createAccount operation and the deleteAccount used to rollback the changes
-                        server.removeOperation();
-                        server.removeOperation();
+    //                     //Rollback the createAccount operation and the deleteAccount used to rollback the changes
+    //                     server.removeOperation();
+    //                     server.removeOperation();
     
-                        //Server B is unavailable so the operation can not be performed
-                        responseObserver.onError(UNAVAILABLE.withDescription("Server is Unavailable").asRuntimeException());
-                        return;
-                    }
-                }
-            }
-        }
+    //                     //Server B is unavailable so the operation can not be performed
+    //                     responseObserver.onError(UNAVAILABLE.withDescription("Server is Unavailable").asRuntimeException());
+    //                     return;
+    //                 }
+    //             }
+    //         }
+    //     }
 
-        DeleteAccountResponse response = DeleteAccountResponse.newBuilder().setCode(code).build();
+    //     DeleteAccountResponse response = DeleteAccountResponse.newBuilder().setCode(code).build();
 
-        responseObserver.onNext(response);
-        responseObserver.onCompleted();
+    //     responseObserver.onNext(response);
+    //     responseObserver.onCompleted();
 
-        //Check debug flag
-        if(debugFlag) {
-            debug("deleteAccount Request completed\n");
-        }
-    }
+    //     //Check debug flag
+    //     if(debugFlag) {
+    //         debug("deleteAccount Request completed\n");
+    //     }
+    // }
 
     @Override
     public void transferTo(TransferToRequest request, StreamObserver<TransferToResponse> responseObserver) {

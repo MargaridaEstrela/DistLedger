@@ -11,7 +11,7 @@ public class CommandParser {
     // private variables
     private static final String SPACE = " ";
     private static final String CREATE_ACCOUNT = "createAccount";
-    private static final String DELETE_ACCOUNT = "deleteAccount";
+    // private static final String DELETE_ACCOUNT = "deleteAccount";
     private static final String TRANSFER_TO = "transferTo";
     private static final String BALANCE = "balance";
     private static final String HELP = "help";
@@ -41,9 +41,9 @@ public class CommandParser {
                         this.createAccount(line);
                         break;
 
-                    case DELETE_ACCOUNT:
-                        this.deleteAccount(line);
-                        break;
+                    // case DELETE_ACCOUNT:
+                    //     this.deleteAccount(line);
+                    //     break;
 
                     case TRANSFER_TO:
                         this.transferTo(line);
@@ -89,21 +89,21 @@ public class CommandParser {
         System.out.println(formatToString(code));
     }
 
-    // To print the delete account command usage
-    private void deleteAccount(String line){
-        String[] split = line.split(SPACE);
+    // // To print the delete account command usage
+    // private void deleteAccount(String line){
+    //     String[] split = line.split(SPACE);
 
-        if (split.length != 3){
-            this.printUsage();
-            return;
-        }
-        String server = split[1];
-        String username = split[2];
+    //     if (split.length != 3){
+    //         this.printUsage();
+    //         return;
+    //     }
+    //     String server = split[1];
+    //     String username = split[2];
 
-        ResponseCode code = this.userService.deleteAccount(server, username);
+    //     ResponseCode code = this.userService.deleteAccount(server, username);
 
-        System.out.println(formatToString(code));
-    }
+    //     System.out.println(formatToString(code));
+    // }
 
     // To print the get account balance command usage
     private void balance(String line){

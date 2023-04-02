@@ -122,9 +122,9 @@ public class AdminServiceImpl extends AdminServiceImplBase {
             if(operation.getType() == "CREATE") {
                 operationContract.setType(OperationType.OP_CREATE_ACCOUNT);
             }
-            else if(operation.getType() == "DELETE") {
-                operationContract.setType(OperationType.OP_DELETE_ACCOUNT);
-            }
+            // else if(operation.getType() == "DELETE") {
+            //     operationContract.setType(OperationType.OP_DELETE_ACCOUNT);
+            // }
             else if(operation.getType() == "TRANSFER") {
                 operationContract.setType(OperationType.OP_TRANSFER_TO);
                 TransferOp transferoperation = (TransferOp) operation;

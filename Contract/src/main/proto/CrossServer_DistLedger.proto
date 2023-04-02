@@ -11,6 +11,7 @@ enum ResponseCode {
 
 message PropagateStateRequest {
   LedgerState state = 1;
+  repeated int32 replicaTS = 2;
 }
 
 message PropagateStateResponse {}

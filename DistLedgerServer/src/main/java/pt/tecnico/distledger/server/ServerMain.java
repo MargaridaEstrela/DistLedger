@@ -86,19 +86,19 @@ public class ServerMain {
 
 		//whenever the server shutdowns run:
 		Runtime.getRuntime().addShutdownHook(new Thread(){
-		@Override
-		public void run()
-		{
-			try {
-				//call the delete method that removes the server entry from the naming server
-				delete(service,address,stub);
-			} 
-			catch (StatusRuntimeException e) {
-				System.out.println("Error deleting server entry from Naming server: " + e.getLocalizedMessage());			
-			}
-			//shutdown the comunication channel with the naming server
-			channel.shutdownNow();
-		}
+		// @Override
+		// public void run()
+		// {
+		// 	try {
+		// 		//call the delete method that removes the server entry from the naming server
+		// 		delete(service,address,stub);
+		// 	} 
+		// 	catch (StatusRuntimeException e) {
+		// 		System.out.println("Error deleting server entry from Naming server: " + e.getLocalizedMessage());			
+		// 	}
+		// 	//shutdown the comunication channel with the naming server
+		// 	channel.shutdownNow();
+		// }
 		});
 
 		try {

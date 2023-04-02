@@ -6,8 +6,8 @@ import pt.ulisboa.tecnico.distledger.contract.user.UserDistLedger.BalanceRequest
 import pt.ulisboa.tecnico.distledger.contract.user.UserDistLedger.BalanceResponse;
 import pt.ulisboa.tecnico.distledger.contract.user.UserDistLedger.CreateAccountRequest;
 import pt.ulisboa.tecnico.distledger.contract.user.UserDistLedger.CreateAccountResponse;
-import pt.ulisboa.tecnico.distledger.contract.user.UserDistLedger.DeleteAccountRequest;
-import pt.ulisboa.tecnico.distledger.contract.user.UserDistLedger.DeleteAccountResponse;
+// import pt.ulisboa.tecnico.distledger.contract.user.UserDistLedger.DeleteAccountRequest;
+// import pt.ulisboa.tecnico.distledger.contract.user.UserDistLedger.DeleteAccountResponse;
 import pt.ulisboa.tecnico.distledger.contract.user.UserDistLedger.TransferToRequest;
 import pt.ulisboa.tecnico.distledger.contract.user.UserDistLedger.TransferToResponse;
 import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServer.LookupRequest;
@@ -77,41 +77,41 @@ public class UserService {
 
     }
 
-    // To delete the user account. Returns a ResponseCode
-    public ResponseCode deleteAccount(String server, String username) {
+    // // To delete the user account. Returns a ResponseCode
+    // public ResponseCode deleteAccount(String server, String username) {
 
-        final ManagedChannel channel = ManagedChannelBuilder.forTarget(lookup("DistLedger", server).get(0)).usePlaintext().build();
-        try {
-            UserServiceGrpc.UserServiceBlockingStub stub = UserServiceGrpc.newBlockingStub(channel);
+    //     final ManagedChannel channel = ManagedChannelBuilder.forTarget(lookup("DistLedger", server).get(0)).usePlaintext().build();
+    //     try {
+    //         UserServiceGrpc.UserServiceBlockingStub stub = UserServiceGrpc.newBlockingStub(channel);
 
-            DeleteAccountRequest deleteAccRequest = DeleteAccountRequest.newBuilder().setUserId(username).build();
-            DeleteAccountResponse deleteAccResponse = stub.deleteAccount(deleteAccRequest);
+    //         DeleteAccountRequest deleteAccRequest = DeleteAccountRequest.newBuilder().setUserId(username).build();
+    //         DeleteAccountResponse deleteAccResponse = stub.deleteAccount(deleteAccRequest);
 
-            channel.shutdownNow();
+    //         channel.shutdownNow();
 
-            ResponseCode code = deleteAccResponse.getCode();
+    //         ResponseCode code = deleteAccResponse.getCode();
 
-            // Debug messages
-            if (code == ResponseCode.OK) {
-                UserClientMain.debug("User " + username + " deleted the account");
-            } else if (code == ResponseCode.NON_EXISTING_USER) {
-                UserClientMain.debug("User " + username + " doesn't exist");
-            }
+    //         // Debug messages
+    //         if (code == ResponseCode.OK) {
+    //             UserClientMain.debug("User " + username + " deleted the account");
+    //         } else if (code == ResponseCode.NON_EXISTING_USER) {
+    //             UserClientMain.debug("User " + username + " doesn't exist");
+    //         }
 
-            return code;
+    //         return code;
 
-        } catch (StatusRuntimeException e) {
-            channel.shutdownNow();
-            // Debug message
-            UserClientMain.debug("Server " + server + " is unreachable");
+    //     } catch (StatusRuntimeException e) {
+    //         channel.shutdownNow();
+    //         // Debug message
+    //         UserClientMain.debug("Server " + server + " is unreachable");
 
-            System.out.println("Caught exception with description: " +
-                    e.getStatus().getDescription());
-        }
+    //         System.out.println("Caught exception with description: " +
+    //                 e.getStatus().getDescription());
+    //     }
 
-        // Return an error code
-        return ResponseCode.UNRECOGNIZED;
-    }
+    //     // Return an error code
+    //     return ResponseCode.UNRECOGNIZED;
+    // }
 
     /*
      * To get the balance of a user. Returns a List with the respective number of

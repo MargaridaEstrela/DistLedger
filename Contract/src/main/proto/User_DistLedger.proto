@@ -12,42 +12,48 @@ enum ResponseCode {
 
 message BalanceRequest {
   string userId = 1;
+  repeated int32 prevTS = 2;
 }
 
 message BalanceResponse {
   ResponseCode code = 1;
   int32 value = 2;
+  repeated int32 valueTS = 3;
 }
 
 message CreateAccountRequest {
   string userId = 1;
+  repeated int32 prevTS = 2;
 }
 
 message CreateAccountResponse {
   ResponseCode code = 1;
+  repeated int32 TS = 2;
 }
 
-message DeleteAccountRequest {
-  string userId = 1;
-}
+// message DeleteAccountRequest {
+//   string userId = 1;
+// }
 
-message DeleteAccountResponse {
-  ResponseCode code = 1;
-}
+// message DeleteAccountResponse {
+//   ResponseCode code = 1;
+// }
 
 message TransferToRequest {
   string accountFrom = 1;
   string accountTo = 2;
   int32 amount = 3;
+  repeated int32 prevTS = 4;
 }
 
 message TransferToResponse {
   ResponseCode code = 1;
+  repeated int32 TS = 2;
 }
 
 service UserService {
   rpc balance(BalanceRequest) returns (BalanceResponse);
   rpc createAccount(CreateAccountRequest) returns (CreateAccountResponse);
-  rpc deleteAccount(DeleteAccountRequest) returns (DeleteAccountResponse);
+  // rpc deleteAccount(DeleteAccountRequest) returns (DeleteAccountResponse);
   rpc transferTo(TransferToRequest) returns (TransferToResponse);
 }

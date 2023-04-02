@@ -73,9 +73,9 @@ public class DistLedgerCrossServerServiceImpl extends DistLedgerCrossServerServi
         if(op.getType() == OperationType.OP_TRANSFER_TO) {
             operation = new TransferOp(op.getUserId(), op.getDestUserId(), (int) op.getAmount());
         }
-        else if(op.getType() == OperationType.OP_DELETE_ACCOUNT) {
-            operation = new DeleteOp(op.getUserId());
-        }
+        // else if(op.getType() == OperationType.OP_DELETE_ACCOUNT) {
+        //     operation = new DeleteOp(op.getUserId());
+        // }
         else if(op.getType() == OperationType.OP_CREATE_ACCOUNT) {
             operation = new CreateOp(op.getUserId());
         }
