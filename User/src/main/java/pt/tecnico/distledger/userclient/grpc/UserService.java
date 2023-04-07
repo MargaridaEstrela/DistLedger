@@ -20,18 +20,23 @@ import io.grpc.ManagedChannelBuilder;
 import io.grpc.StatusRuntimeException;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+
+import com.google.protobuf.Int32Value;
 
 public class UserService {
 
     // Private variables
     private NamingServerServiceGrpc.NamingServerServiceBlockingStub stub;
     private ResponseCode code;
+    private List<Integer> TS;
 
     // Constructor
     public UserService(NamingServerServiceGrpc.NamingServerServiceBlockingStub stub) {
         this.stub = stub;
-        code = ResponseCode.UNRECOGNIZED;
+        this.code = ResponseCode.UNRECOGNIZED;
+        this.TS = new ArrayList<>(Arrays.asList(0, 0));
     }
 
     // Get the ResponseCode of a response.
@@ -46,12 +51,12 @@ public class UserService {
         try {
             UserServiceGrpc.UserServiceBlockingStub stub = UserServiceGrpc.newBlockingStub(channel);
 
-
-            CreateAccountRequest createAccRequest = CreateAccountRequest.newBuilder().setUserId(username).build();
+            CreateAccountRequest createAccRequest = CreateAccountRequest.newBuilder().setUserId(username).addAllPrevTS(TS).build();
             CreateAccountResponse createAccResponse = stub.createAccount(createAccRequest);
 
             channel.shutdownNow();
 
+            this.TS = createAccResponse.getTSList();
             ResponseCode code = createAccResponse.getCode();
 
             // Debug messages
@@ -125,10 +130,11 @@ public class UserService {
         List<Integer> res = new ArrayList<Integer>();
 
         try {
-            BalanceRequest balanceRequest = BalanceRequest.newBuilder().setUserId(username).build();
+            BalanceRequest balanceRequest = BalanceRequest.newBuilder().setUserId(username).addAllPrevTS(TS).build();
             BalanceResponse balanceResponse = stub.balance(balanceRequest);
 
             channel.shutdownNow();
+            this.TS = balanceResponse.getValueTSList();
 
             ResponseCode code = balanceResponse.getCode();
             int balance = balanceResponse.getValue();
@@ -167,11 +173,12 @@ public class UserService {
             UserServiceGrpc.UserServiceBlockingStub stub = UserServiceGrpc.newBlockingStub(channel);
 
             TransferToRequest transferToRequest = TransferToRequest.newBuilder().setAccountFrom(from).setAccountTo(dest)
-                    .setAmount(amount).build();
+                    .setAmount(amount).addAllPrevTS(TS).build();
             TransferToResponse transferToResponse = stub.transferTo(transferToRequest);
 
             channel.shutdownNow();
 
+            this.TS = transferToResponse.getTSList();
             ResponseCode code = transferToResponse.getCode();
 
             // Debug messages

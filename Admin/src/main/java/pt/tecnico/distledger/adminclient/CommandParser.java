@@ -109,6 +109,19 @@ public class CommandParser {
         // Print being done in the AdminService
     }
 
+    // @SuppressWarnings("unused")
+    private void gossip(String line){
+        String[] split = line.split(SPACE);
+
+        if (split.length != 2){
+            this.printUsage();
+            return;
+        }
+        String server = split[1];
+        ResponseCode code = this.adminService.gossip(server);
+        System.out.println(formatToString(code));
+    }
+
     // To convert the ResponseCode to a string
     public static String formatToString(ResponseCode code) {
         switch(code) {
@@ -119,11 +132,6 @@ public class CommandParser {
         return "UNAVAILABLE SERVER";
     }
 
-    @SuppressWarnings("unused")
-    private void gossip(String line){
-        /* TODO Phase-3 */
-        System.out.println("TODO: implement gossip command (only for Phase-3)");
-    }
 
     // To print the help command
     private void printUsage() {

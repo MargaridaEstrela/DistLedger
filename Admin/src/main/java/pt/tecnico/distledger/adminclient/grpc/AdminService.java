@@ -9,6 +9,8 @@ import pt.ulisboa.tecnico.distledger.contract.admin.AdminDistLedger.ActivateRequ
 import pt.ulisboa.tecnico.distledger.contract.admin.AdminDistLedger.ActivateResponse;
 import pt.ulisboa.tecnico.distledger.contract.admin.AdminDistLedger.DeactivateRequest;
 import pt.ulisboa.tecnico.distledger.contract.admin.AdminDistLedger.DeactivateResponse;
+import pt.ulisboa.tecnico.distledger.contract.admin.AdminDistLedger.GossipRequest;
+import pt.ulisboa.tecnico.distledger.contract.admin.AdminDistLedger.GossipResponse;
 import pt.ulisboa.tecnico.distledger.contract.admin.AdminDistLedger.getLedgerStateRequest;
 import pt.ulisboa.tecnico.distledger.contract.admin.AdminDistLedger.getLedgerStateResponse;
 import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServer.LookupRequest;
@@ -101,6 +103,7 @@ public class AdminService {
         return ResponseCode.UNRECOGNIZED;
     }
 
+    // To get the content of the ledger
     public void dump(String server){
         try {
             final ManagedChannel channel = ManagedChannelBuilder.forTarget(lookup("DistLedger", server).get(0)).usePlaintext().build();
@@ -112,13 +115,10 @@ public class AdminService {
             channel.shutdownNow();
 
             ResponseCode code = response.getCode();
-            LedgerState ledgerState = response.getLedgerState();
 
             // Debug message
             if (code == ResponseCode.OK) {
                 AdminClientMain.debug("Dumped everything successfully");
-                System.out.println("OK");
-                System.out.println(ledgerState.toString());
             }    
 
         } catch (StatusRuntimeException e) {
@@ -159,6 +159,39 @@ public class AdminService {
 
         return res;
 
+    }
+
+    public ResponseCode gossip(String server) {
+
+        try {
+            final ManagedChannel channel = ManagedChannelBuilder.forTarget(lookup("DistLedger", server).get(0)).usePlaintext().build();
+            AdminServiceGrpc.AdminServiceBlockingStub stub = AdminServiceGrpc.newBlockingStub(channel);
+
+            GossipRequest gossipRequest = GossipRequest.newBuilder().build();
+            GossipResponse gossipResponse = stub.gossip(gossipRequest);
+
+            channel.shutdownNow();
+
+            ResponseCode code = gossipResponse.getCode();
+
+            // Debug message
+            if (code == ResponseCode.OK) {
+                AdminClientMain.debug("Dumped everything successfully");
+            }  
+
+            return code;
+
+        } catch (StatusRuntimeException e) {
+            // Debug message
+            AdminClientMain.debug("Server " + server + " is unreachable");
+
+            System.out.println("Caught exception with description: " +
+                    e.getStatus().getDescription());
+        }
+        
+        // Return an error code
+        return ResponseCode.UNRECOGNIZED;
+        
     }
 
 }
