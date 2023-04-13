@@ -6,8 +6,8 @@ public class TransferOp extends Operation {
     private String destAccount;
     private int amount;
 
-    public TransferOp(String fromAccount, String destAccount, int amount, List<Integer> prevTS) {
-        super(fromAccount, prevTS);
+    public TransferOp(String fromAccount, String destAccount, int amount, List<Integer> prevTS, List<Integer> ts) {
+        super(fromAccount, prevTS, ts);
         this.destAccount = destAccount;
         this.amount = amount;
     }

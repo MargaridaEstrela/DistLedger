@@ -137,6 +137,7 @@ public class ServerState {
     //Execute/Add Update Operation to the ledger
     public List<Integer> updateOperation(Operation operation) {
         List<Integer> ts = this.getUnstables().addToUpdateLog(operation);
+        this.getLedger().add(operation);
         if(this.canExecute(operation.getPrevTS())) {
             this.executeOperation(operation);
             this.merge(this.getValueTS(), operation.getPrevTS());
@@ -204,7 +205,7 @@ public class ServerState {
     }
 
     private void deleteAccount(DeleteOp operation) {
-        if(this.existsAccount(operation.getAccount())) {
+        if(this.existsAccount(operation.getAccount()) || !this.hasMoney(operation.getAccount())) {
             this.getAccounts().remove(operation.getAccount());
         }
     }
@@ -215,5 +216,48 @@ public class ServerState {
             getAccount(operation.getAccount()).setMoney(getAccount(operation.getAccount()).getMoney() - operation.getAmount());
             getAccount(operation.getDestAccount()).setMoney(getAccount(operation.getDestAccount()).getMoney() + operation.getAmount());
         }
+    }
+
+    //gossip sender
+    public List<Operation> getOperationsToGossip() {
+        List<Operation> answer = new ArrayList<Operation>();
+        for(Operation operation : this.getLedger()) {
+            if(!operation.getStable()) {
+                answer.add(operation);
+                operation.stabilize();
+            }
+        }
+        return answer;
+    }
+
+    //gossip receiver
+    public void gossip(List<Operation> log, List<Integer> otherReplicaTS) {
+        for(Operation operation : log) {
+            if(!this.lessThan(operation.getTS(), this.getUnstables().getReplicaTS())) {
+                this.mergeIntoLog(operation);
+                this.getLedger().add(operation);
+            }
+        }
+        this.merge(this.getUnstables().getReplicaTS(), otherReplicaTS);
+        this.tryExecuteMore();
+    }
+
+    private void mergeIntoLog(Operation operation) {
+        this.getUnstables().getUpdateLog().put(operation.getTS(),operation);
+    }
+
+    private boolean lessThan(List<Integer> ts1, List<Integer> ts2) {
+        while (ts2.size() < ts1.size()) {
+            ts2.add(0);
+        }
+        while (ts2.size() > ts1.size()) {
+            ts1.add(0);
+        }
+        for(int i = 0; i < ts2.size(); i++) {
+            if(ts1.get(i) > ts2.get(i)) {
+                return false;
+            }
+        }
+        return true;
     }
 }

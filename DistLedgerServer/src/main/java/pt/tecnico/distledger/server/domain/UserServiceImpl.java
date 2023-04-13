@@ -87,7 +87,7 @@ public class UserServiceImpl extends UserServiceImplBase {
         ResponseCode code = OK;
         CreateAccountResponse response;
 
-        CreateOp operation = new CreateOp(request.getUserId(), request.getPrevTSList());
+        CreateOp operation = new CreateOp(request.getUserId(), request.getPrevTSList(),null);
 
         response = CreateAccountResponse.newBuilder().setCode(code).addAllTS(server.updateOperation(operation)).build();
 
@@ -180,7 +180,7 @@ public class UserServiceImpl extends UserServiceImplBase {
 
         ResponseCode code = OK;
 
-        TransferOp operation = new TransferOp(request.getAccountFrom(), request.getAccountTo(), request.getAmount(), request.getPrevTSList());
+        TransferOp operation = new TransferOp(request.getAccountFrom(), request.getAccountTo(), request.getAmount(), request.getPrevTSList(),null);
         
         TransferToResponse response = TransferToResponse.newBuilder().setCode(code).addAllTS(server.updateOperation(operation)).build();
 

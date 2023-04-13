@@ -4,8 +4,8 @@ import java.util.List;
 
 public class CreateOp extends Operation {
 
-    public CreateOp(String account, List<Integer> prevTS) {
-        super(account, prevTS);
+    public CreateOp(String account, List<Integer> prevTS, List<Integer> ts) {
+        super(account, prevTS, ts);
     }
     
     public String getType () {

@@ -35,6 +35,7 @@ public class UpdateLog {
         List<Integer> ts = new ArrayList<Integer>(operation.getPrevTS());
         ts.set(this.getReplicaNumber(),this.getReplicaTS().get(this.getReplicaNumber()));
         this.getUpdateLog().put(ts,operation);
+        operation.setTS(ts);
         return ts;
     }
 

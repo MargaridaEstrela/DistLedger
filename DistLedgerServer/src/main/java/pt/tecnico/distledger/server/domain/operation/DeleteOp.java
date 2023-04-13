@@ -4,8 +4,8 @@ import java.util.List;
 
 public class DeleteOp extends Operation {
 
-    public DeleteOp(String account, List<Integer> prevTS) {
-        super(account, prevTS);
+    public DeleteOp(String account, List<Integer> prevTS, List<Integer> ts) {
+        super(account, prevTS, ts);
     }
 
     public String getType () {
