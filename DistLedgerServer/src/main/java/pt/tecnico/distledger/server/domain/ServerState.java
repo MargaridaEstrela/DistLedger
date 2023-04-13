@@ -1,9 +1,6 @@
 package pt.tecnico.distledger.server.domain;
 
-import pt.tecnico.distledger.server.domain.operation.Operation;
-import pt.tecnico.distledger.server.domain.operation.TransferOp;
-import pt.tecnico.distledger.server.domain.operation.DeleteOp;
-import pt.tecnico.distledger.server.domain.operation.CreateOp;
+import pt.tecnico.distledger.server.domain.operation.*;
 import pt.tecnico.distledger.server.domain.account.Account;
 
 import java.util.ArrayList;
@@ -13,19 +10,45 @@ import java.util.HashMap;
 public class ServerState {
 
     //Private variables
+    private UpdateLog unstables;
     private List<Operation> ledger;
+    private List<Integer> valueTS;
+    private Integer num;
+
     private HashMap<String, Account> accounts;
     private boolean activated;
 
     //Constructor
-    public ServerState() {
-        this.ledger = new ArrayList<>();
+    public ServerState(Integer replicaNumber) {
+        //creation of the log
+        this.num = replicaNumber;
+        this.valueTS = new ArrayList<Integer>();
+        this.startTS();
+        this.unstables = new UpdateLog(new ArrayList<Integer>(valueTS), replicaNumber);
+        
+        //creation of the ledger and account HashMap
+        this.ledger = new ArrayList<Operation>();
         this.accounts = new HashMap<String, Account>();
         this.activated = true;
 
         //creation of the Broker Account
         Account broker = new Account("broker", 1000);
         this.accounts.put("broker",broker);
+    }
+
+    //inicialize TS
+    private void startTS() {
+        for(int i = 0; i < this.getNum(); i++) {
+            this.getValueTS().add(0);
+        }
+    }
+
+    public void activate () {
+        setActivated(true);
+    }
+
+    public void deactivate () {
+        setActivated(false);
     }
 
     //Setters:
@@ -36,6 +59,10 @@ public class ServerState {
     //Getters:
     public boolean getActivated () {
         return this.activated;
+    }
+
+    public List<Integer> getValueTS() {
+        return this.valueTS;
     }
 
     public HashMap<String, Account> getAccounts () {
@@ -50,35 +77,49 @@ public class ServerState {
         return this.ledger;
     }
 
+    public Integer getNum () {
+        return this.num;
+    }
+
     public Integer getMoneyAccount (String Id) {
         return getAccount(Id).getMoney();
     }
 
-    //Create a new account and add it to the Server
-    public void addAccount (String AccountId) {
-        Account account = new Account(AccountId, 0);
-        this.getAccounts().put(account.getId(),account);
-        this.addOperation(new CreateOp(account.getId()));
+    public String getOperationType (Operation operation) {
+        return operation.getType();
     }
 
-    //Add an Operation to the ledger
-    public void addOperation (Operation operation) {
-        this.getLedger().add(operation);
+    public UpdateLog getUnstables() {
+        return this.unstables;
     }
 
-    //Remove an account from the Server
-    public void removeAccount (String Id) {
-        this.getAccounts().remove(Id);
-        this.addOperation(new DeleteOp(Id));
+    private boolean canExecute (List<Integer> ts) {
+        while (ts.size() < this.getValueTS().size()) {
+            ts.add(0);
+        }
+        while (ts.size() > this.getValueTS().size()) {
+            this.getValueTS().add(0);
+        }
+        for(int i = 0; i < ts.size(); i++) {
+            if(ts.get(i) > this.getValueTS().get(i)) {
+                return false;
+            }
+        }
+        return true;
     }
 
-    //Transfer command
-    public void transferTo (String accountIdFrom, String accountIdTo, Integer amount) {
-        Account accountFrom = getAccount(accountIdFrom);
-        Account accountTo = getAccount(accountIdTo);
-        accountFrom.setMoney(accountFrom.getMoney() - amount);
-        accountTo.setMoney(accountTo.getMoney() + amount);
-        addOperation(new TransferOp(accountFrom.getId(), accountTo.getId(), amount));
+    private void merge(List<Integer> ts1, List<Integer> ts2) {
+        while (ts1.size() < ts2.size()) {
+            ts1.add(0);
+        }
+        while (ts2.size() > ts1.size()) {
+            ts2.add(0);
+        }
+        for(int i = 0; i < ts2.size(); i++) {
+            if(ts1.get(i) < ts2.get(i)) {
+                ts1.set(i,ts2.get(i));
+            }
+        }
     }
 
     public boolean existsAccount (String Id) {
@@ -93,47 +134,86 @@ public class ServerState {
         return getMoneyAccount(Id) > 0;
     }
 
-    public void activate () {
-        setActivated(true);
+    //Execute/Add Update Operation to the ledger
+    public List<Integer> updateOperation(Operation operation) {
+        List<Integer> ts = this.getUnstables().addToUpdateLog(operation);
+        if(this.canExecute(operation.getPrevTS())) {
+            this.executeOperation(operation);
+            this.merge(this.getValueTS(), operation.getPrevTS());
+            this.getUnstables().removeOperation(ts);
+            this.tryExecuteMore();
+        }
+        return ts;
     }
 
-    public void deactivate () {
-        setActivated(false);
+    //Check if more operations have become stable
+    private void tryExecuteMore() {
+        boolean update = false;
+        for(List<Integer> ts : this.getUnstables().getUpdateLog().keySet()) {
+            if(this.canExecute(ts)) {
+                update = true;
+                this.executeOperation(this.getUnstables().getOperation(ts));
+                this.merge(this.getValueTS(), this.getUnstables().getOperation(ts).getPrevTS());
+                this.getUnstables().removeOperation(ts);
+            }
+        }
+        if(update) {
+            this.tryExecuteMore();
+        }
     }
 
-    public String getOperationType (Operation operation) {
-        return operation.getType();
+    //Execute Query TODO Mover para service?
+    public List<List<Integer>> queryOperation(List<Integer> prevTS, String accountID) {
+        List<List<Integer>> answer = new ArrayList<List<Integer>>();
+        answer.add(this.getValueTS());
+        if(this.canExecute(prevTS)) {
+            answer.add(this.getBalance(accountID));
+        }
+        return answer;
     }
 
     //Execute an operation
     private void executeOperation (Operation operation) {
         //Get the type of operation and execute it
         if(operation.getType() == "CREATE") {
-            addAccount(operation.getAccount());
+            this.createAccount((CreateOp) operation);
         }
         else if(operation.getType() == "DELETE") {
-            removeAccount(operation.getAccount());
+            this.deleteAccount((DeleteOp) operation);
         }
         else if(operation.getType() == "TRANSFER") {
-            TransferOp transferOperation = (TransferOp) operation;  
-            transferTo(transferOperation.getAccount(), transferOperation.getDestAccount(), transferOperation.getAmount());
+            this.transferTo((TransferOp) operation);
         }
     }
 
-    //Update the ledger with new operations
-    public void update (List<Operation> operations) {
-        //ArrayList of new ledger
-        ArrayList<Operation> newLedger = new ArrayList<Operation> (operations);
-
-        //select only the new operations
-        List<Operation> ledger = newLedger.subList(this.getLedger().size(), newLedger.size());
-
-        //call executeOperation method on each opeartion
-        ledger.forEach(operation -> executeOperation(operation));
+    private List<Integer> getBalance(String accountID) {
+        List<Integer> answer = new ArrayList<Integer>();
+        if(!this.existsAccount(accountID)) {
+            answer.add(1);
+            return answer;
+        }
+        answer.add(0);
+        answer.add(this.getMoneyAccount(accountID));
+        return answer;
     }
 
-    //Remove the last operation (used in case of rollback)
-    public void removeOperation() {
-        this.getLedger().remove(this.getLedger().size()-1);
+    private void createAccount(CreateOp operation) {
+        if(!this.existsAccount(operation.getAccount())) {
+            this.getAccounts().put(operation.getAccount(),new Account(operation.getAccount(), 0));
+        }
+    }
+
+    private void deleteAccount(DeleteOp operation) {
+        if(this.existsAccount(operation.getAccount())) {
+            this.getAccounts().remove(operation.getAccount());
+        }
+    }
+
+    private void transferTo(TransferOp operation) {
+        if(this.existsAccount(operation.getAccount()) && this.existsAccount(operation.getDestAccount()) 
+        && this.hasMoney(operation.getAccount(), operation.getAmount()) && operation.getAmount() > 0) {
+            getAccount(operation.getAccount()).setMoney(getAccount(operation.getAccount()).getMoney() - operation.getAmount());
+            getAccount(operation.getDestAccount()).setMoney(getAccount(operation.getDestAccount()).getMoney() + operation.getAmount());
+        }
     }
 }

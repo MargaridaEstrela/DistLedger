@@ -10,20 +10,17 @@ import pt.tecnico.distledger.server.domain.operation.*;
 
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class AdminServiceImpl extends AdminServiceImplBase {
 
     //Private variables
     private ServerState server;
     private boolean debugFlag;
-    private String type;
 
     //Constructor
-    public AdminServiceImpl(ServerState server, boolean debugFlag, String type) {
+    public AdminServiceImpl(ServerState server, boolean debugFlag) {
         this.server = server;
         this.debugFlag = debugFlag;
-        this.type = type;
     }
 
     //debug

@@ -8,6 +8,7 @@ enum ResponseCode {
   NON_EXISTING_USER = 1;
   USER_ALREADY_EXISTS = 2;
   AMOUNT_NOT_SUPORTED = 3;
+  UNABLE_TO_DETERMINE = 4;
 }
 
 message BalanceRequest {
