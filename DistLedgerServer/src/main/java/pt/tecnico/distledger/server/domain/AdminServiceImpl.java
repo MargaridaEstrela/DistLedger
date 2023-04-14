@@ -201,6 +201,8 @@ public class AdminServiceImpl extends AdminServiceImplBase {
                 operationContract.setType(OperationType.OP_UNSPECIFIED);
             }
             operationContract.setUserId(operation.getAccount());
+            operationContract.addAllPrevTS(new ArrayList<Integer>(operation.getPrevTS()));
+            operationContract.addAllTS(new ArrayList<Integer>(operation.getTS()));
             ledger.addLedger(operationContract.build());
         }
         
