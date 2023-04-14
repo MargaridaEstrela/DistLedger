@@ -46,8 +46,11 @@ public class UserServiceImpl extends UserServiceImplBase {
 
         ResponseCode code = OK;
         BalanceResponse.Builder response = BalanceResponse.newBuilder();
+        List<List<Integer>> query;
 
-        List<List<Integer>> query = server.queryOperation(new ArrayList<Integer>(request.getPrevTSList()), request.getUserId());
+        synchronized(server) {
+            query = server.queryOperation(new ArrayList<Integer>(request.getPrevTSList()), request.getUserId());
+        }
 
         if(query.size() < 2) {
             code = UNABLE_TO_DETERMINE;
@@ -90,7 +93,10 @@ public class UserServiceImpl extends UserServiceImplBase {
 
         CreateOp operation = new CreateOp(request.getUserId(), new ArrayList<Integer>(request.getPrevTSList()),new ArrayList<Integer>());
 
-        response = CreateAccountResponse.newBuilder().setCode(code).addAllTS(server.updateOperation(operation)).build();
+        synchronized(server) {
+            response = CreateAccountResponse.newBuilder().setCode(code).addAllTS(server.updateOperation(operation)).build();
+        }
+
         responseObserver.onNext(response);
         responseObserver.onCompleted();
 
@@ -182,7 +188,11 @@ public class UserServiceImpl extends UserServiceImplBase {
 
         TransferOp operation = new TransferOp(request.getAccountFrom(), request.getAccountTo(), request.getAmount(), new ArrayList<Integer>(request.getPrevTSList()),new ArrayList<Integer>());
         
-        TransferToResponse response = TransferToResponse.newBuilder().setCode(code).addAllTS(server.updateOperation(operation)).build();
+        TransferToResponse response;
+
+        synchronized(server) {
+            response = TransferToResponse.newBuilder().setCode(code).addAllTS(server.updateOperation(operation)).build();
+        }
 
         responseObserver.onNext(response);
         responseObserver.onCompleted();
@@ -192,61 +202,4 @@ public class UserServiceImpl extends UserServiceImplBase {
             debug("transferTo Request completed\n");
         }
     }
-
-    // private int propagate() {
-
-    //     //get the list with type B servers
-    //     List<String> addresses = this.lookup();
-
-    //     //List of operations on the current server (ledger)
-    //     ArrayList<pt.tecnico.distledger.server.domain.operation.Operation> operations = new ArrayList(server.getLedger());
-
-    //     LedgerState.Builder ledger = LedgerState.newBuilder();
-
-    //     //Retrieve all operations done so far
-    //     for (pt.tecnico.distledger.server.domain.operation.Operation operation : operations) {
-    //         pt.ulisboa.tecnico.distledger.contract.DistLedgerCommonDefinitions.Operation.Builder operationContract = DistLedgerCommonDefinitions.Operation.newBuilder();
-    //         //Check the type of Operation
-    //         if(operation.getType() == "CREATE") {
-    //             operationContract.setType(OperationType.OP_CREATE_ACCOUNT);
-    //         }
-    //         else if(operation.getType() == "DELETE") {
-    //             operationContract.setType(OperationType.OP_DELETE_ACCOUNT);
-    //         }
-    //         else if(operation.getType() == "TRANSFER") {
-    //             operationContract.setType(OperationType.OP_TRANSFER_TO);
-    //             TransferOp transferoperation = (TransferOp) operation;
-    //             operationContract.setDestUserId(transferoperation.getDestAccount());
-    //             operationContract.setAmount(transferoperation.getAmount());
-    //         }
-    //         else {
-    //             operationContract.setType(OperationType.OP_UNSPECIFIED);
-    //         }
-    //         operationContract.setUserId(operation.getAccount());
-    //         ledger.addLedger(operationContract.build());
-    //     }
-        
-    //     //Request message
-    //     PropagateStateRequest request = PropagateStateRequest.newBuilder().setState(ledger.build()).build();
-
-    //     //propagate to all B servers
-    //     for (String address : addresses) {
-
-    //         final ManagedChannel channel = ManagedChannelBuilder.forTarget(address).usePlaintext().build();
-    //         //Try to propagate to all server if unavailable return -1 else return 0
-    //         try {
-    //             DistLedgerCrossServerServiceGrpc.DistLedgerCrossServerServiceBlockingStub stub = DistLedgerCrossServerServiceGrpc.newBlockingStub(channel);
-
-    //             PropagateStateResponse response = stub.propagateState(request);
-
-    //             channel.shutdown();
-    //         }
-
-    //         catch (StatusRuntimeException e) {
-    //             channel.shutdown();
-    //             return -1;
-    //         }
-    //     }
-    //     return 0;
-    // }
 }

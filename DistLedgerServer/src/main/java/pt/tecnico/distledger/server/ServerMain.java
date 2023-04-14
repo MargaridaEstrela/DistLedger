@@ -9,11 +9,18 @@ import pt.tecnico.distledger.server.domain.AdminServiceImpl;
 import pt.tecnico.distledger.server.domain.DistLedgerCrossServerServiceImpl;
 import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServer.*;
 import pt.ulisboa.tecnico.distledger.contract.namingserver.*;
+import pt.ulisboa.tecnico.distledger.contract.admin.AdminDistLedger.getLedgerStateRequest;
+import pt.ulisboa.tecnico.distledger.contract.distledgerserver.*;
+import pt.tecnico.distledger.server.domain.operation.*;
+import pt.ulisboa.tecnico.distledger.contract.distledgerserver.CrossServerDistLedger.*;
+import pt.ulisboa.tecnico.distledger.contract.DistLedgerCommonDefinitions;
+import pt.ulisboa.tecnico.distledger.contract.DistLedgerCommonDefinitions.*;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 
 import io.grpc.StatusRuntimeException;
 import java.io.IOException;
+import java.util.*;
 
 public class ServerMain {
 
@@ -75,6 +82,29 @@ public class ServerMain {
 		}
 
 		ServerState serverState = new ServerState(serverNumber);
+		List<pt.tecnico.distledger.server.domain.operation.Operation> ledger = new ArrayList<pt.tecnico.distledger.server.domain.operation.Operation>();
+		if(serverNumber>2) {
+			boolean success = false;
+			List<String> addresses = lookup();
+			for(String adr : addresses) {
+				final ManagedChannel channel2 = ManagedChannelBuilder.forTarget(adr).usePlaintext().build();
+				DistLedgerCrossServerServiceGrpc.DistLedgerCrossServerServiceBlockingStub stub2 = DistLedgerCrossServerServiceGrpc.newBlockingStub(channel2);
+				GetFullStateRequest request = GetFullStateRequest.newBuilder().build();
+				try{
+					GetFullStateResponse response = stub2.getFullState(request);
+					response.getState().getLedgerList().forEach(op -> addOperation(ledger, op));
+					serverState.gossip(ledger, new ArrayList<Integer>(response.getReplicaTSList()));
+					channel2.shutdown();
+					success = true;
+				}
+				catch(StatusRuntimeException e) {
+					channel2.shutdown();
+				}
+			}
+			if(!success) {
+				System.exit(1);
+			}
+		}
 
 		//DistLedger server services
 		final BindableService userImpl = new UserServiceImpl(serverState, debugFlag);
@@ -148,6 +178,58 @@ public class ServerMain {
                     e.getStatus().getDescription());
         }
 	}
+
+	static private List<String> lookup() {
+
+        List<String> res = new ArrayList<String>();
+
+        //Definition of the service and server type to find
+        String serviceName = "DistLedger";
+
+        try {
+            //naming server address
+            final String host = "localhost";
+            final int namingServerPort = 5001;
+            final String target = host + ":" + namingServerPort;
+
+            //open a stub with the naming server
+            final ManagedChannel channel = ManagedChannelBuilder.forTarget(target).usePlaintext().build();
+            NamingServerServiceGrpc.NamingServerServiceBlockingStub stub2 = NamingServerServiceGrpc.newBlockingStub(channel);
+
+            //Request the information of the server
+            LookupRequest lookupRequest = LookupRequest.newBuilder().setServiceName(serviceName).build();
+            LookupResponse lookupResponse = stub2.lookup(lookupRequest);
+            
+            //Create list with all the answers
+            for (String server : lookupResponse.getServersList()) {
+                res.add(server);
+            }
+            channel.shutdown();
+
+        } catch (StatusRuntimeException e) {
+            // Debug message
+            debug("Server " + serviceName + " is unreachable");
+            
+            System.out.println("Caught exception with description: " +
+                    e.getStatus().getDescription());
+        }
+        return res;
+    }
+	static private void addOperation(List<pt.tecnico.distledger.server.domain.operation.Operation> ledger, pt.ulisboa.tecnico.distledger.contract.DistLedgerCommonDefinitions.Operation op) {
+        pt.tecnico.distledger.server.domain.operation.Operation operation = null;
+        //get the type of operation and call the constructor
+        if(op.getType() == OperationType.OP_TRANSFER_TO) {
+            operation = new TransferOp(op.getUserId(), op.getDestUserId(), (int) op.getAmount(), new ArrayList<Integer>(op.getPrevTSList()), new ArrayList<Integer>(op.getTSList()));
+        }
+         else if(op.getType() == OperationType.OP_DELETE_ACCOUNT) {
+             operation = new DeleteOp(op.getUserId(), new ArrayList<Integer>(op.getPrevTSList()), new ArrayList<Integer>(op.getTSList()));
+        }
+        else if(op.getType() == OperationType.OP_CREATE_ACCOUNT) {
+            operation = new CreateOp(op.getUserId(), new ArrayList<Integer>(op.getPrevTSList()), new ArrayList<Integer>(op.getTSList()));
+        }
+        //Add the new operation to a list (ledger)
+        ledger.add(operation);
+    }
 
 }
 

@@ -58,16 +58,14 @@ public class UserService {
 
             channel.shutdownNow();
 
-            this.merge(createAccResponse.getTSList());
+            this.merge(new ArrayList<Integer>(createAccResponse.getTSList()));
+
             ResponseCode code = createAccResponse.getCode();
 
             // Debug messages
             if (code == ResponseCode.OK) {
                 UserClientMain.debug("User " + username + " created an account");
-            } else if (code == ResponseCode.USER_ALREADY_EXISTS) {
-                UserClientMain.debug("User " + username + " already exists");
             }
-
             return code;
 
         } catch (StatusRuntimeException e) {
@@ -139,7 +137,7 @@ public class UserService {
 
             ResponseCode code = balanceResponse.getCode();
             if(code != ResponseCode.UNABLE_TO_DETERMINE) {
-                this.merge(balanceResponse.getValueTSList());
+                this.merge(new ArrayList<Integer>(balanceResponse.getValueTSList()));
             }
 
             int balance = balanceResponse.getValue();
@@ -176,23 +174,18 @@ public class UserService {
         final ManagedChannel channel = ManagedChannelBuilder.forTarget(lookup("DistLedger", server).get(0)).usePlaintext().build();
         try {
             UserServiceGrpc.UserServiceBlockingStub stub = UserServiceGrpc.newBlockingStub(channel);
-
+            
             TransferToRequest transferToRequest = TransferToRequest.newBuilder().setAccountFrom(from).setAccountTo(dest)
                     .setAmount(amount).addAllPrevTS(TS).build();
             TransferToResponse transferToResponse = stub.transferTo(transferToRequest);
 
             channel.shutdownNow();
 
-            this.merge(transferToResponse.getTSList());
+            this.merge(new ArrayList<Integer>(transferToResponse.getTSList()));
             ResponseCode code = transferToResponse.getCode();
 
-            // Debug messages
             if (code == ResponseCode.OK) {
-                UserClientMain.debug("User " + from + " transfered " + amount + " to user " + dest);
-            } else if (code == ResponseCode.USER_ALREADY_EXISTS) {
-                UserClientMain.debug("Something wrong with users");
-            } else if (code == ResponseCode.AMOUNT_NOT_SUPORTED) {
-                UserClientMain.debug("User " + from + " doesn't have enough amount");
+                UserClientMain.debug("Transfer From " + from + " to " + dest + " with value " + amount);
             }
 
             // Return an error code
@@ -241,7 +234,7 @@ public class UserService {
     }
 
     private void merge(List<Integer> ts) {
-        while (ts.size() < this.TS.size()) {
+        while (this.TS.size() > ts.size()) {
             ts.add(0);
         }
         while (ts.size() > this.TS.size()) {

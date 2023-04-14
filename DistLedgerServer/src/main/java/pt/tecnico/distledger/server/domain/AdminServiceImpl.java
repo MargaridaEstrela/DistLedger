@@ -51,7 +51,9 @@ public class AdminServiceImpl extends AdminServiceImplBase {
         ResponseCode code = OK;
 
         //call the activate function
-        server.activate();
+        synchronized(server) {
+            server.activate();
+        }
 
         ActivateResponse response = ActivateResponse.newBuilder().setCode(code).build();
 
@@ -74,7 +76,9 @@ public class AdminServiceImpl extends AdminServiceImplBase {
         ResponseCode code = OK;
 
         //call the deactivate function
-        server.deactivate();
+        synchronized(server) {
+            server.deactivate();
+        }
 
         DeactivateResponse response = DeactivateResponse.newBuilder().setCode(code).build();
 
@@ -95,45 +99,59 @@ public class AdminServiceImpl extends AdminServiceImplBase {
         }
 
         ResponseCode code = OK;
+        List<pt.tecnico.distledger.server.domain.operation.Operation> operations;
+        List<Integer> replicaTS;
 
-        //TODO Sync here
-        List<pt.tecnico.distledger.server.domain.operation.Operation> operations = server.getOperationsToGossip();
-        List<Integer> replicaTS = server.getUnstables().getReplicaTS();
         List<String> servers = this.lookup();
         LedgerState.Builder ledger = LedgerState.newBuilder();
+        boolean success = true;
 
-        for (pt.tecnico.distledger.server.domain.operation.Operation operation : operations) {
-            pt.ulisboa.tecnico.distledger.contract.DistLedgerCommonDefinitions.Operation.Builder operationContract = DistLedgerCommonDefinitions.Operation.newBuilder();
+        synchronized(server) {
+            operations = server.getOperationsToGossip();
+            replicaTS = server.getUnstables().getReplicaTS();
+            for (pt.tecnico.distledger.server.domain.operation.Operation operation : operations) {
+                pt.ulisboa.tecnico.distledger.contract.DistLedgerCommonDefinitions.Operation.Builder operationContract = DistLedgerCommonDefinitions.Operation.newBuilder();
 
-            //Check the type of Operation
-            if(operation.getType() == "CREATE") {
-                operationContract.setType(OperationType.OP_CREATE_ACCOUNT);
+                //Check the type of Operation
+                if(operation.getType() == "CREATE") {
+                    operationContract.setType(OperationType.OP_CREATE_ACCOUNT);
+                }
+                else if(operation.getType() == "DELETE") {
+                    operationContract.setType(OperationType.OP_DELETE_ACCOUNT);
+                }
+                else if(operation.getType() == "TRANSFER") {
+                    operationContract.setType(OperationType.OP_TRANSFER_TO);
+                    TransferOp transferoperation = (TransferOp) operation;
+                    operationContract.setDestUserId(transferoperation.getDestAccount());
+                    operationContract.setAmount(transferoperation.getAmount());
+                }
+                else {
+                    operationContract.setType(OperationType.OP_UNSPECIFIED);
+                }
+                operationContract.setUserId(operation.getAccount());
+                operationContract.addAllTS(operation.getTS());
+                operationContract.addAllPrevTS(operation.getPrevTS());
+                ledger.addLedger(operationContract.build());
             }
-            else if(operation.getType() == "DELETE") {
-                operationContract.setType(OperationType.OP_DELETE_ACCOUNT);
+            PropagateStateRequest newRequest = PropagateStateRequest.newBuilder().setState(ledger).addAllReplicaTS(replicaTS).build();
+            for (String address : servers) {
+                if(!address.equals(this.address)) {
+                    final ManagedChannel channel = ManagedChannelBuilder.forTarget(address).usePlaintext().build();
+                    DistLedgerCrossServerServiceGrpc.DistLedgerCrossServerServiceBlockingStub stub = DistLedgerCrossServerServiceGrpc.newBlockingStub(channel);
+                    try{
+                        stub.propagateState(newRequest);
+                        channel.shutdown();
+                    }
+                    catch(StatusRuntimeException e) {
+                        channel.shutdown();
+                        success = false;
+                    }
+                }
             }
-            else if(operation.getType() == "TRANSFER") {
-                operationContract.setType(OperationType.OP_TRANSFER_TO);
-                TransferOp transferoperation = (TransferOp) operation;
-                operationContract.setDestUserId(transferoperation.getDestAccount());
-                operationContract.setAmount(transferoperation.getAmount());
-            }
-            else {
-                operationContract.setType(OperationType.OP_UNSPECIFIED);
-            }
-            operationContract.setUserId(operation.getAccount());
-            operationContract.addAllTS(operation.getTS());
-            operationContract.addAllPrevTS(operation.getPrevTS());
-            ledger.addLedger(operationContract.build());
-        }
-
-        PropagateStateRequest newRequest = PropagateStateRequest.newBuilder().setState(ledger).addAllReplicaTS(replicaTS).build();
-        for (String address : servers) {
-            if(!address.equals(this.address)) {
-                final ManagedChannel channel = ManagedChannelBuilder.forTarget(address).usePlaintext().build();
-                DistLedgerCrossServerServiceGrpc.DistLedgerCrossServerServiceBlockingStub stub = DistLedgerCrossServerServiceGrpc.newBlockingStub(channel);
-                stub.propagateState(newRequest);
-                channel.shutdown();
+            if(success) {
+                for(pt.tecnico.distledger.server.domain.operation.Operation operation : operations) {
+                    operation.stabilize();
+                }
             }
         }
         GossipResponse response = GossipResponse.newBuilder().setCode(code).build();
@@ -155,9 +173,12 @@ public class AdminServiceImpl extends AdminServiceImplBase {
         }
 
         ResponseCode code = OK;
+        List<pt.tecnico.distledger.server.domain.operation.Operation> operations;
 
         //ArrayList of operations from the server ledger
-        List<pt.tecnico.distledger.server.domain.operation.Operation> operations = server.getLedger();
+        synchronized(server) {
+            operations = server.getLedger();
+        }
 
         LedgerState.Builder ledger = LedgerState.newBuilder();
 
@@ -219,6 +240,7 @@ public class AdminServiceImpl extends AdminServiceImplBase {
             for (String server : lookupResponse.getServersList()) {
                 res.add(server);
             }
+            channel.shutdown();
 
         } catch (StatusRuntimeException e) {
             // Debug message

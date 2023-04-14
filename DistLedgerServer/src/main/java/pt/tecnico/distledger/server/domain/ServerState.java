@@ -6,7 +6,6 @@ import pt.tecnico.distledger.server.domain.account.Account;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.HashMap;
-import java.util.Set;
 
 public class ServerState {
 
@@ -170,7 +169,6 @@ public class ServerState {
         return update;
     }
 
-    //Execute Query TODO Mover para service?
     public List<List<Integer>> queryOperation(List<Integer> prevTS, String accountID) {
         List<List<Integer>> answer = new ArrayList<List<Integer>>();
         answer.add(this.getValueTS());
@@ -231,7 +229,6 @@ public class ServerState {
         for(Operation operation : this.getLedger()) {
             if(!operation.getStable()) {
                 answer.add(operation);
-                operation.stabilize();
             }
         }
         return answer;

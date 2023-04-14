@@ -157,6 +157,7 @@ public class CommandParser {
             case NON_EXISTING_USER : return "NON EXISTING USER";
             case USER_ALREADY_EXISTS : return "USER ALREADY EXISTS";
             case AMOUNT_NOT_SUPORTED : return "AMOUNT NOT SUPPORTED";
+            case UNABLE_TO_DETERMINE : return "SERVER NOT UP TO DATE";
             case UNRECOGNIZED : return "UNRECOGNIZED ERROR";
         }
 
@@ -170,6 +171,7 @@ public class CommandParser {
             case 1 : return ResponseCode.NON_EXISTING_USER;
             case 2 : return ResponseCode.USER_ALREADY_EXISTS;
             case 3 : return ResponseCode.AMOUNT_NOT_SUPORTED;
+            case 4 : return ResponseCode.UNABLE_TO_DETERMINE;
         }
 
         return ResponseCode.UNRECOGNIZED;
