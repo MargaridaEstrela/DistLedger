@@ -64,7 +64,7 @@ public class UserService {
 
             // Debug messages
             if (code == ResponseCode.OK) {
-                UserClientMain.debug("User " + username + " created an account");
+                UserClientMain.debug("User " + username + " created an account, resulting TS " + TS);
             }
             return code;
 
@@ -139,6 +139,9 @@ public class UserService {
             if(code != ResponseCode.UNABLE_TO_DETERMINE) {
                 this.merge(new ArrayList<Integer>(balanceResponse.getValueTSList()));
             }
+            if (code == ResponseCode.OK) {
+                UserClientMain.debug("resulting TS " + TS);
+            }
 
             int balance = balanceResponse.getValue();
 
@@ -148,7 +151,7 @@ public class UserService {
 
             // Debug message
             if (code == ResponseCode.NON_EXISTING_USER) {
-                UserClientMain.debug("User " + username + "doesn't exist");
+                UserClientMain.debug("User " + username + "doesn't exist, resulting TS " + TS);
             }
 
             return res;
@@ -185,7 +188,7 @@ public class UserService {
             ResponseCode code = transferToResponse.getCode();
 
             if (code == ResponseCode.OK) {
-                UserClientMain.debug("Transfer From " + from + " to " + dest + " with value " + amount);
+                UserClientMain.debug("Transfer From " + from + " to " + dest + " with value " + amount + ", resulting TS " + TS);
             }
 
             // Return an error code
