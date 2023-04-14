@@ -1,17 +1,15 @@
 package pt.tecnico.distledger.namingserver;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import io.grpc.stub.StreamObserver;
 import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServer.RegisterRequest;
 import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServer.RegisterResponse;
 import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServer.LookupRequest;
 import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServer.LookupResponse;
-// import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServer.DeleteRequest;
-// import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServer.DeleteResponse;
+import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServer.DeleteRequest;
+import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServer.DeleteResponse;
 import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServerServiceGrpc;
 import static io.grpc.Status.ALREADY_EXISTS;
+import java.util.*;
 
 public class NamingServerServiceImpl extends NamingServerServiceGrpc.NamingServerServiceImplBase {
 
@@ -38,6 +36,7 @@ public class NamingServerServiceImpl extends NamingServerServiceGrpc.NamingServe
         String serviceName = request.getService();
         String type = request.getType();
         String[] address = request.getAddress().split(":");
+        Integer serverNumber;
         synchronized(namingServer) {
             // Check if service name is already registered
             if (!namingServer.getServicesMap().containsKey(serviceName)) {
@@ -56,11 +55,11 @@ public class NamingServerServiceImpl extends NamingServerServiceGrpc.NamingServe
             // Create the service entry and register
             ServerEntry serverEntry = new ServerEntry(address[0], type, address[1]);
             serviceEntry.addServerEntry(serverEntry);
-            namingServer.addServerName(serviceName, serviceEntry);
+            serverNumber = namingServer.addServerName(serviceName, serviceEntry);
         }
 
 
-        response = RegisterResponse.getDefaultInstance();
+        response = RegisterResponse.newBuilder().setServerNumber(serverNumber).build();
         responseObserver.onNext(response);
         responseObserver.onCompleted();
 
@@ -113,41 +112,41 @@ public class NamingServerServiceImpl extends NamingServerServiceGrpc.NamingServe
 
     }
 
-    // // To delete a server from the naming server list
-    // @Override
-    // public void delete(DeleteRequest request, StreamObserver<DeleteResponse> responseObserver) {
+    // To delete a server from the naming server list
+    @Override
+    public void delete(DeleteRequest request, StreamObserver<DeleteResponse> responseObserver) {
 
-    //     // Debug message
-    //     NamingServer.debug("Received delete request");
+        // Debug message
+        NamingServer.debug("Received delete request");
 
-    //     List<ServerEntry> toDelete = new ArrayList<ServerEntry>();
-    //     DeleteResponse response;
-    //     String serviceName = request.getService();
-    //     String[] address = request.getAddress().split(":");
+        List<ServerEntry> toDelete = new ArrayList<ServerEntry>();
+        DeleteResponse response;
+        String serviceName = request.getService();
+        String[] address = request.getAddress().split(":");
 
-    //     synchronized(namingServer) {
-    //         // Colect server to be deleted into a list
-    //         if (namingServer.getServicesMap().containsKey(serviceName)) {
-    //             for (ServerEntry serverEntry : namingServer.getServicesMap().get(serviceName).getServiceEntriesList()) {
-    //                 if (serverEntry.getHost().equals(address[0]) && serverEntry.getPort().equals(address[1])) {
-    //                     toDelete.add(serverEntry);
-    //                 }
-    //             }
-    //         }
+        synchronized(namingServer) {
+            // Colect server to be deleted into a list
+            if (namingServer.getServicesMap().containsKey(serviceName)) {
+                for (ServerEntry serverEntry : namingServer.getServicesMap().get(serviceName).getServiceEntriesList()) {
+                    if (serverEntry.getHost().equals(address[0]) && serverEntry.getPort().equals(address[1])) {
+                        toDelete.add(serverEntry);
+                    }
+                }
+            }
 
-    //         // Remove servers in the list
-    //         toDelete.forEach(serverEntry -> namingServer.getServicesMap().get(serviceName).getServiceEntriesList()
-    //                 .remove(serverEntry));
-    //         if (namingServer.getServicesMap().get(serviceName).getServiceEntriesList().size() == 0) {
-    //             namingServer.getServicesMap().remove(serviceName);
-    //         }
-    //     }
+            // Remove servers in the list
+            toDelete.forEach(serverEntry -> namingServer.getServicesMap().get(serviceName).getServiceEntriesList()
+                    .remove(serverEntry));
+            if (namingServer.getServicesMap().get(serviceName).getServiceEntriesList().size() == 0) {
+                namingServer.getServicesMap().remove(serviceName);
+            }
+        }
 
-    //     response = DeleteResponse.getDefaultInstance();
-    //     responseObserver.onNext(response);
-    //     responseObserver.onCompleted();
+        response = DeleteResponse.getDefaultInstance();
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
 
-    //     // Debug message
-    //     NamingServer.debug("Ended delete request");
-    // }
+        // Debug message
+        NamingServer.debug("Ended delete request");
+    }
 }

@@ -9,6 +9,7 @@ import static pt.ulisboa.tecnico.distledger.contract.user.UserDistLedger.Respons
 
 import static io.grpc.Status.UNAVAILABLE;
 import java.util.List;
+import java.util.ArrayList;
 
 public class UserServiceImpl extends UserServiceImplBase {
 
@@ -46,7 +47,7 @@ public class UserServiceImpl extends UserServiceImplBase {
         ResponseCode code = OK;
         BalanceResponse.Builder response = BalanceResponse.newBuilder();
 
-        List<List<Integer>> query = server.queryOperation(request.getPrevTSList(), request.getUserId());
+        List<List<Integer>> query = server.queryOperation(new ArrayList<Integer>(request.getPrevTSList()), request.getUserId());
 
         if(query.size() < 2) {
             code = UNABLE_TO_DETERMINE;
@@ -87,10 +88,9 @@ public class UserServiceImpl extends UserServiceImplBase {
         ResponseCode code = OK;
         CreateAccountResponse response;
 
-        CreateOp operation = new CreateOp(request.getUserId(), request.getPrevTSList(),null);
+        CreateOp operation = new CreateOp(request.getUserId(), new ArrayList<Integer>(request.getPrevTSList()),new ArrayList<Integer>());
 
         response = CreateAccountResponse.newBuilder().setCode(code).addAllTS(server.updateOperation(operation)).build();
-
         responseObserver.onNext(response);
         responseObserver.onCompleted();
 
@@ -180,7 +180,7 @@ public class UserServiceImpl extends UserServiceImplBase {
 
         ResponseCode code = OK;
 
-        TransferOp operation = new TransferOp(request.getAccountFrom(), request.getAccountTo(), request.getAmount(), request.getPrevTSList(),null);
+        TransferOp operation = new TransferOp(request.getAccountFrom(), request.getAccountTo(), request.getAmount(), new ArrayList<Integer>(request.getPrevTSList()),new ArrayList<Integer>());
         
         TransferToResponse response = TransferToResponse.newBuilder().setCode(code).addAllTS(server.updateOperation(operation)).build();
 
@@ -192,43 +192,6 @@ public class UserServiceImpl extends UserServiceImplBase {
             debug("transferTo Request completed\n");
         }
     }
-
-    // private List<String> lookup() {
-
-    //     List<String> res = new ArrayList<String>();
-
-    //     //Definition of the service and server type to find
-    //     String serviceName = "DistLedger";
-    //     String type = "B";
-
-    //     try {
-    //         //naming server address
-    //         final String host = "localhost";
-    //         final int namingServerPort = 5001;
-    //         final String target = host + ":" + namingServerPort;
-
-    //         //open a stub with the naming server
-    //         final ManagedChannel channel = ManagedChannelBuilder.forTarget(target).usePlaintext().build();
-    //         NamingServerServiceGrpc.NamingServerServiceBlockingStub stub2 = NamingServerServiceGrpc.newBlockingStub(channel);
-
-    //         //Request the information of the server
-    //         LookupRequest lookupRequest = LookupRequest.newBuilder().setServiceName(serviceName).setType(type).build();
-    //         LookupResponse lookupResponse = stub2.lookup(lookupRequest);
-            
-    //         //Create list with all the answers
-    //         for (String server : lookupResponse.getServersList()) {
-    //             res.add(server);
-    //         }
-
-    //     } catch (StatusRuntimeException e) {
-    //         // Debug message
-    //         debug("Server " + serviceName + " is unreachable");
-            
-    //         System.out.println("Caught exception with description: " +
-    //                 e.getStatus().getDescription());
-    //     }
-    //     return res;
-    // }
 
     // private int propagate() {
 

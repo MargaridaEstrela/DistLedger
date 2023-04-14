@@ -36,7 +36,8 @@ public class UserService {
     public UserService(NamingServerServiceGrpc.NamingServerServiceBlockingStub stub) {
         this.stub = stub;
         this.code = ResponseCode.UNRECOGNIZED;
-        this.TS = new ArrayList<>(Arrays.asList(0, 0));
+        this.TS = new ArrayList<Integer>();
+        this.TS.add(0);
     }
 
     // Get the ResponseCode of a response.
@@ -48,6 +49,7 @@ public class UserService {
     public ResponseCode createAccount(String server, String username) {
 
         final ManagedChannel channel = ManagedChannelBuilder.forTarget(lookup("DistLedger", server).get(0)).usePlaintext().build();
+
         try {
             UserServiceGrpc.UserServiceBlockingStub stub = UserServiceGrpc.newBlockingStub(channel);
 
@@ -56,7 +58,7 @@ public class UserService {
 
             channel.shutdownNow();
 
-            this.TS = createAccResponse.getTSList();
+            this.merge(createAccResponse.getTSList());
             ResponseCode code = createAccResponse.getCode();
 
             // Debug messages
@@ -134,9 +136,12 @@ public class UserService {
             BalanceResponse balanceResponse = stub.balance(balanceRequest);
 
             channel.shutdownNow();
-            this.TS = balanceResponse.getValueTSList();
 
             ResponseCode code = balanceResponse.getCode();
+            if(code != ResponseCode.UNABLE_TO_DETERMINE) {
+                this.merge(balanceResponse.getValueTSList());
+            }
+
             int balance = balanceResponse.getValue();
 
             // Add the ResponseCode and balance to the list
@@ -178,7 +183,7 @@ public class UserService {
 
             channel.shutdownNow();
 
-            this.TS = transferToResponse.getTSList();
+            this.merge(transferToResponse.getTSList());
             ResponseCode code = transferToResponse.getCode();
 
             // Debug messages
@@ -233,5 +238,19 @@ public class UserService {
 
         return res;
 
+    }
+
+    private void merge(List<Integer> ts) {
+        while (ts.size() < this.TS.size()) {
+            ts.add(0);
+        }
+        while (ts.size() > this.TS.size()) {
+            this.TS.add(0);
+        }
+        for(int i = 0; i < ts.size(); i++) {
+            if(this.TS.get(i) < ts.get(i)) {
+                this.TS.set(i,ts.get(i));
+            }
+        }
     }
 }

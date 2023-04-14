@@ -78,7 +78,7 @@ public class ServerMain {
 
 		//DistLedger server services
 		final BindableService userImpl = new UserServiceImpl(serverState, debugFlag);
-		final BindableService adminImpl = new AdminServiceImpl(serverState, debugFlag);
+		final BindableService adminImpl = new AdminServiceImpl(serverState, debugFlag, address);
 		final BindableService crossImpl = new DistLedgerCrossServerServiceImpl(serverState, debugFlag);
 
 		//Add the services to the server
@@ -86,19 +86,19 @@ public class ServerMain {
 
 		//whenever the server shutdowns run:
 		Runtime.getRuntime().addShutdownHook(new Thread(){
-		// @Override
-		// public void run()
-		// {
-		// 	try {
-		// 		//call the delete method that removes the server entry from the naming server
-		// 		delete(service,address,stub);
-		// 	} 
-		// 	catch (StatusRuntimeException e) {
-		// 		System.out.println("Error deleting server entry from Naming server: " + e.getLocalizedMessage());			
-		// 	}
-		// 	//shutdown the comunication channel with the naming server
-		// 	channel.shutdownNow();
-		// }
+		@Override
+		public void run()
+		{
+			try {
+				//call the delete method that removes the server entry from the naming server
+				delete(service,address,stub);
+			} 
+			catch (StatusRuntimeException e) {
+				System.out.println("Error deleting server entry from Naming server: " + e.getLocalizedMessage());			
+			}
+			//shutdown the comunication channel with the naming server
+			channel.shutdownNow();
+		}
 		});
 
 		try {
@@ -134,20 +134,20 @@ public class ServerMain {
         }
     }
 
-	// //To delete an entry on the naming server
-	// public static void delete(String service, String address, NamingServerServiceGrpc.NamingServerServiceBlockingStub stub) {
-	// 	try {
-	// 		if(running) {
-	// 			//use the stub with the naming server to call the service delete
-	// 			DeleteRequest deleteRequest = DeleteRequest.newBuilder().setService(service).setAddress(address).build();
-	// 			DeleteResponse deleteResponse = stub.delete(deleteRequest);
-	// 		}
+	//To delete an entry on the naming server
+	public static void delete(String service, String address, NamingServerServiceGrpc.NamingServerServiceBlockingStub stub) {
+		try {
+			if(running) {
+				//use the stub with the naming server to call the service delete
+				DeleteRequest deleteRequest = DeleteRequest.newBuilder().setService(service).setAddress(address).build();
+				DeleteResponse deleteResponse = stub.delete(deleteRequest);
+			}
 
-    //     } catch (StatusRuntimeException e) {
-    //         System.out.println("Caught exception with description: " +
-    //                 e.getStatus().getDescription());
-    //     }
-	// }
+        } catch (StatusRuntimeException e) {
+            System.out.println("Caught exception with description: " +
+                    e.getStatus().getDescription());
+        }
+	}
 
 }
 

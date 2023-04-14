@@ -23,15 +23,15 @@ message LookupResponse {
   repeated string servers = 1;
 }
 
-// message DeleteRequest {
-//     string service = 1;
-//     string address = 2;
-// }
+message DeleteRequest {
+    string service = 1;
+    string address = 2;
+}
 
-// message DeleteResponse {}
+message DeleteResponse {}
 
 service NamingServerService {
   rpc register(RegisterRequest) returns (RegisterResponse);
   rpc lookup(LookupRequest) returns (LookupResponse);
-  // rpc delete(DeleteRequest) returns (DeleteResponse);
+  rpc delete(DeleteRequest) returns (DeleteResponse);
 }

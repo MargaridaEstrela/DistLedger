@@ -6,6 +6,7 @@ import pt.tecnico.distledger.server.domain.account.Account;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.HashMap;
+import java.util.Set;
 
 public class ServerState {
 
@@ -21,7 +22,7 @@ public class ServerState {
     //Constructor
     public ServerState(Integer replicaNumber) {
         //creation of the log
-        this.num = replicaNumber;
+        this.num = replicaNumber-1;
         this.valueTS = new ArrayList<Integer>();
         this.startTS();
         this.unstables = new UpdateLog(new ArrayList<Integer>(valueTS), replicaNumber);
@@ -38,7 +39,7 @@ public class ServerState {
 
     //inicialize TS
     private void startTS() {
-        for(int i = 0; i < this.getNum(); i++) {
+        for(int i = 0; i < this.getNum()+1; i++) {
             this.getValueTS().add(0);
         }
     }
@@ -112,7 +113,7 @@ public class ServerState {
         while (ts1.size() < ts2.size()) {
             ts1.add(0);
         }
-        while (ts2.size() > ts1.size()) {
+        while (ts2.size() < ts1.size()) {
             ts2.add(0);
         }
         for(int i = 0; i < ts2.size(); i++) {
@@ -140,27 +141,33 @@ public class ServerState {
         this.getLedger().add(operation);
         if(this.canExecute(operation.getPrevTS())) {
             this.executeOperation(operation);
-            this.merge(this.getValueTS(), operation.getPrevTS());
-            this.getUnstables().removeOperation(ts);
-            this.tryExecuteMore();
+            this.merge(this.getValueTS(), operation.getTS());
+            this.getUnstables().removeOperation(operation);
+            boolean update = true;
+            while(update) {
+                update = this.tryExecuteMore();
+            }
         }
         return ts;
     }
 
     //Check if more operations have become stable
-    private void tryExecuteMore() {
+    private boolean tryExecuteMore() {
         boolean update = false;
-        for(List<Integer> ts : this.getUnstables().getUpdateLog().keySet()) {
-            if(this.canExecute(ts)) {
+        List<Operation> operations = this.getUnstables().getUpdateLog();
+        List<Operation> toRemove = new ArrayList<Operation>();
+        for(Operation operation : operations) {
+            if(this.canExecute(operation.getPrevTS())) {
                 update = true;
-                this.executeOperation(this.getUnstables().getOperation(ts));
-                this.merge(this.getValueTS(), this.getUnstables().getOperation(ts).getPrevTS());
-                this.getUnstables().removeOperation(ts);
+                this.executeOperation(operation);
+                this.merge(this.getValueTS(), operation.getTS());
+                toRemove.add(operation);
             }
         }
-        if(update) {
-            this.tryExecuteMore();
+        for(Operation operation : toRemove) {
+            this.getUnstables().removeOperation(operation);
         }
+        return update;
     }
 
     //Execute Query TODO Mover para service?
@@ -233,20 +240,23 @@ public class ServerState {
     //gossip receiver
     public void gossip(List<Operation> log, List<Integer> otherReplicaTS) {
         for(Operation operation : log) {
-            if(!this.lessThan(operation.getTS(), this.getUnstables().getReplicaTS())) {
+            if(!this.smallerThan(operation.getTS(), this.getUnstables().getReplicaTS())) {
                 this.mergeIntoLog(operation);
                 this.getLedger().add(operation);
             }
         }
         this.merge(this.getUnstables().getReplicaTS(), otherReplicaTS);
-        this.tryExecuteMore();
+        boolean update = true;
+        while(update) {
+            update = this.tryExecuteMore();
+        }
     }
 
     private void mergeIntoLog(Operation operation) {
-        this.getUnstables().getUpdateLog().put(operation.getTS(),operation);
+        this.getUnstables().getUpdateLog().add(operation);
     }
 
-    private boolean lessThan(List<Integer> ts1, List<Integer> ts2) {
+    private boolean smallerThan(List<Integer> ts1, List<Integer> ts2) {
         while (ts2.size() < ts1.size()) {
             ts2.add(0);
         }

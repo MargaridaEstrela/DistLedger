@@ -115,11 +115,14 @@ public class AdminService {
             channel.shutdownNow();
 
             ResponseCode code = response.getCode();
+            LedgerState ledgerState = response.getLedgerState();
 
             // Debug message
             if (code == ResponseCode.OK) {
                 AdminClientMain.debug("Dumped everything successfully");
-            }    
+                System.out.println("OK");
+                System.out.println(ledgerState.toString());
+            }   
 
         } catch (StatusRuntimeException e) {
             // Debug message
