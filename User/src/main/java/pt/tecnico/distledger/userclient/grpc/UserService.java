@@ -6,8 +6,8 @@ import pt.ulisboa.tecnico.distledger.contract.user.UserDistLedger.BalanceRequest
 import pt.ulisboa.tecnico.distledger.contract.user.UserDistLedger.BalanceResponse;
 import pt.ulisboa.tecnico.distledger.contract.user.UserDistLedger.CreateAccountRequest;
 import pt.ulisboa.tecnico.distledger.contract.user.UserDistLedger.CreateAccountResponse;
-import pt.ulisboa.tecnico.distledger.contract.user.UserDistLedger.DeleteAccountRequest;
-import pt.ulisboa.tecnico.distledger.contract.user.UserDistLedger.DeleteAccountResponse;
+// import pt.ulisboa.tecnico.distledger.contract.user.UserDistLedger.DeleteAccountRequest;
+// import pt.ulisboa.tecnico.distledger.contract.user.UserDistLedger.DeleteAccountResponse;
 import pt.ulisboa.tecnico.distledger.contract.user.UserDistLedger.TransferToRequest;
 import pt.ulisboa.tecnico.distledger.contract.user.UserDistLedger.TransferToResponse;
 import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServer.LookupRequest;
@@ -20,18 +20,24 @@ import io.grpc.ManagedChannelBuilder;
 import io.grpc.StatusRuntimeException;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+
+import com.google.protobuf.Int32Value;
 
 public class UserService {
 
     // Private variables
     private NamingServerServiceGrpc.NamingServerServiceBlockingStub stub;
     private ResponseCode code;
+    private List<Integer> TS;
 
     // Constructor
     public UserService(NamingServerServiceGrpc.NamingServerServiceBlockingStub stub) {
         this.stub = stub;
-        code = ResponseCode.UNRECOGNIZED;
+        this.code = ResponseCode.UNRECOGNIZED;
+        this.TS = new ArrayList<Integer>();
+        this.TS.add(0);
     }
 
     // Get the ResponseCode of a response.
@@ -43,15 +49,16 @@ public class UserService {
     public ResponseCode createAccount(String server, String username) {
 
         final ManagedChannel channel = ManagedChannelBuilder.forTarget(lookup("DistLedger", server).get(0)).usePlaintext().build();
+
         try {
             UserServiceGrpc.UserServiceBlockingStub stub = UserServiceGrpc.newBlockingStub(channel);
 
-
-            CreateAccountRequest createAccRequest = CreateAccountRequest.newBuilder().setUserId(username).build();
+            CreateAccountRequest createAccRequest = CreateAccountRequest.newBuilder().setUserId(username).addAllPrevTS(TS).build();
             CreateAccountResponse createAccResponse = stub.createAccount(createAccRequest);
 
             channel.shutdownNow();
 
+            this.merge(createAccResponse.getTSList());
             ResponseCode code = createAccResponse.getCode();
 
             // Debug messages
@@ -77,41 +84,41 @@ public class UserService {
 
     }
 
-    // To delete the user account. Returns a ResponseCode
-    public ResponseCode deleteAccount(String server, String username) {
+    // // To delete the user account. Returns a ResponseCode
+    // public ResponseCode deleteAccount(String server, String username) {
 
-        final ManagedChannel channel = ManagedChannelBuilder.forTarget(lookup("DistLedger", server).get(0)).usePlaintext().build();
-        try {
-            UserServiceGrpc.UserServiceBlockingStub stub = UserServiceGrpc.newBlockingStub(channel);
+    //     final ManagedChannel channel = ManagedChannelBuilder.forTarget(lookup("DistLedger", server).get(0)).usePlaintext().build();
+    //     try {
+    //         UserServiceGrpc.UserServiceBlockingStub stub = UserServiceGrpc.newBlockingStub(channel);
 
-            DeleteAccountRequest deleteAccRequest = DeleteAccountRequest.newBuilder().setUserId(username).build();
-            DeleteAccountResponse deleteAccResponse = stub.deleteAccount(deleteAccRequest);
+    //         DeleteAccountRequest deleteAccRequest = DeleteAccountRequest.newBuilder().setUserId(username).build();
+    //         DeleteAccountResponse deleteAccResponse = stub.deleteAccount(deleteAccRequest);
 
-            channel.shutdownNow();
+    //         channel.shutdownNow();
 
-            ResponseCode code = deleteAccResponse.getCode();
+    //         ResponseCode code = deleteAccResponse.getCode();
 
-            // Debug messages
-            if (code == ResponseCode.OK) {
-                UserClientMain.debug("User " + username + " deleted the account");
-            } else if (code == ResponseCode.NON_EXISTING_USER) {
-                UserClientMain.debug("User " + username + " doesn't exist");
-            }
+    //         // Debug messages
+    //         if (code == ResponseCode.OK) {
+    //             UserClientMain.debug("User " + username + " deleted the account");
+    //         } else if (code == ResponseCode.NON_EXISTING_USER) {
+    //             UserClientMain.debug("User " + username + " doesn't exist");
+    //         }
 
-            return code;
+    //         return code;
 
-        } catch (StatusRuntimeException e) {
-            channel.shutdownNow();
-            // Debug message
-            UserClientMain.debug("Server " + server + " is unreachable");
+    //     } catch (StatusRuntimeException e) {
+    //         channel.shutdownNow();
+    //         // Debug message
+    //         UserClientMain.debug("Server " + server + " is unreachable");
 
-            System.out.println("Caught exception with description: " +
-                    e.getStatus().getDescription());
-        }
+    //         System.out.println("Caught exception with description: " +
+    //                 e.getStatus().getDescription());
+    //     }
 
-        // Return an error code
-        return ResponseCode.UNRECOGNIZED;
-    }
+    //     // Return an error code
+    //     return ResponseCode.UNRECOGNIZED;
+    // }
 
     /*
      * To get the balance of a user. Returns a List with the respective number of
@@ -125,12 +132,16 @@ public class UserService {
         List<Integer> res = new ArrayList<Integer>();
 
         try {
-            BalanceRequest balanceRequest = BalanceRequest.newBuilder().setUserId(username).build();
+            BalanceRequest balanceRequest = BalanceRequest.newBuilder().setUserId(username).addAllPrevTS(TS).build();
             BalanceResponse balanceResponse = stub.balance(balanceRequest);
 
             channel.shutdownNow();
 
             ResponseCode code = balanceResponse.getCode();
+            if(code != ResponseCode.UNABLE_TO_DETERMINE) {
+                this.merge(balanceResponse.getValueTSList());
+            }
+
             int balance = balanceResponse.getValue();
 
             // Add the ResponseCode and balance to the list
@@ -167,11 +178,12 @@ public class UserService {
             UserServiceGrpc.UserServiceBlockingStub stub = UserServiceGrpc.newBlockingStub(channel);
 
             TransferToRequest transferToRequest = TransferToRequest.newBuilder().setAccountFrom(from).setAccountTo(dest)
-                    .setAmount(amount).build();
+                    .setAmount(amount).addAllPrevTS(TS).build();
             TransferToResponse transferToResponse = stub.transferTo(transferToRequest);
 
             channel.shutdownNow();
 
+            this.merge(transferToResponse.getTSList());
             ResponseCode code = transferToResponse.getCode();
 
             // Debug messages
@@ -226,5 +238,19 @@ public class UserService {
 
         return res;
 
+    }
+
+    private void merge(List<Integer> ts) {
+        while (ts.size() < this.TS.size()) {
+            ts.add(0);
+        }
+        while (ts.size() > this.TS.size()) {
+            this.TS.add(0);
+        }
+        for(int i = 0; i < ts.size(); i++) {
+            if(this.TS.get(i) < ts.get(i)) {
+                this.TS.set(i,ts.get(i));
+            }
+        }
     }
 }

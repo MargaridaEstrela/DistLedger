@@ -1,8 +1,5 @@
 package pt.tecnico.distledger.namingserver;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import io.grpc.stub.StreamObserver;
 import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServer.RegisterRequest;
 import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServer.RegisterResponse;
@@ -12,6 +9,7 @@ import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServer.DeleteRe
 import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServer.DeleteResponse;
 import pt.ulisboa.tecnico.distledger.contract.namingserver.NamingServerServiceGrpc;
 import static io.grpc.Status.ALREADY_EXISTS;
+import java.util.*;
 
 public class NamingServerServiceImpl extends NamingServerServiceGrpc.NamingServerServiceImplBase {
 
@@ -38,6 +36,7 @@ public class NamingServerServiceImpl extends NamingServerServiceGrpc.NamingServe
         String serviceName = request.getService();
         String type = request.getType();
         String[] address = request.getAddress().split(":");
+        Integer serverNumber;
         synchronized(namingServer) {
             // Check if service name is already registered
             if (!namingServer.getServicesMap().containsKey(serviceName)) {
@@ -56,11 +55,11 @@ public class NamingServerServiceImpl extends NamingServerServiceGrpc.NamingServe
             // Create the service entry and register
             ServerEntry serverEntry = new ServerEntry(address[0], type, address[1]);
             serviceEntry.addServerEntry(serverEntry);
-            namingServer.addServerName(serviceName, serviceEntry);
+            serverNumber = namingServer.addServerName(serviceName, serviceEntry);
         }
 
 
-        response = RegisterResponse.getDefaultInstance();
+        response = RegisterResponse.newBuilder().setServerNumber(serverNumber).build();
         responseObserver.onNext(response);
         responseObserver.onCompleted();
 

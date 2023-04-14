@@ -10,7 +10,9 @@ message RegisterRequest {
   string address = 3;
 }
 
-message RegisterResponse {}
+message RegisterResponse {
+  int32 serverNumber = 1;
+}
 
 message LookupRequest {
   string serviceName = 1;

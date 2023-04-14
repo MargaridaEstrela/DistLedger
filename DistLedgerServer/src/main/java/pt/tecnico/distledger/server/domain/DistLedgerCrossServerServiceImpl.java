@@ -51,8 +51,7 @@ public class DistLedgerCrossServerServiceImpl extends DistLedgerCrossServerServi
         request.getState().getLedgerList().forEach(op -> addOperation(ledger, op));
 
         synchronized(server) {
-            //update the server with the new ledger
-            server.update(ledger);
+            server.gossip(ledger, new ArrayList<Integer>(request.getReplicaTSList()));
         }
 
         //send response
@@ -66,18 +65,19 @@ public class DistLedgerCrossServerServiceImpl extends DistLedgerCrossServerServi
         }
     }
 
+    //TODO
     //Convert a Proto Operation into a ServerState Operation
     private void addOperation(List<pt.tecnico.distledger.server.domain.operation.Operation> ledger, pt.ulisboa.tecnico.distledger.contract.DistLedgerCommonDefinitions.Operation op) {
         pt.tecnico.distledger.server.domain.operation.Operation operation = null;
         //get the type of operation and call the constructor
         if(op.getType() == OperationType.OP_TRANSFER_TO) {
-            operation = new TransferOp(op.getUserId(), op.getDestUserId(), (int) op.getAmount());
+            operation = new TransferOp(op.getUserId(), op.getDestUserId(), (int) op.getAmount(), new ArrayList<Integer>(op.getPrevTSList()), new ArrayList<Integer>(op.getTSList()));
         }
-        else if(op.getType() == OperationType.OP_DELETE_ACCOUNT) {
-            operation = new DeleteOp(op.getUserId());
+         else if(op.getType() == OperationType.OP_DELETE_ACCOUNT) {
+             operation = new DeleteOp(op.getUserId(), new ArrayList<Integer>(op.getPrevTSList()), new ArrayList<Integer>(op.getTSList()));
         }
         else if(op.getType() == OperationType.OP_CREATE_ACCOUNT) {
-            operation = new CreateOp(op.getUserId());
+            operation = new CreateOp(op.getUserId(), new ArrayList<Integer>(op.getPrevTSList()), new ArrayList<Integer>(op.getTSList()));
         }
         //Add the new operation to a list (ledger)
         ledger.add(operation);

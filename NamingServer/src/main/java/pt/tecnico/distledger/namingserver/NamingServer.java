@@ -35,8 +35,9 @@ public class NamingServer {
     }
 
     // Set a new service entry associated with the specified service name
-    public void addServerName(String serviceName, ServiceEntry serviceEntry) {
+    public Integer addServerName(String serviceName, ServiceEntry serviceEntry) {
         servicesMap.put(serviceName, serviceEntry);
+        return servicesMap.get(serviceName).getServiceEntriesList().size();
     }
 
     // Get the service entry associated with the specified service name

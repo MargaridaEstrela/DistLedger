@@ -69,16 +69,16 @@ public class ServerMain {
 		final ManagedChannel channel = ManagedChannelBuilder.forTarget(target).usePlaintext().build();
 		NamingServerServiceGrpc.NamingServerServiceBlockingStub stub = NamingServerServiceGrpc.newBlockingStub(channel);
 
-		register(service,type,address,stub);
+		int serverNumber = register(service,type,address,stub);
 		if(!running) {
 			System.exit(1);
 		}
 
-		ServerState serverState = new ServerState();
+		ServerState serverState = new ServerState(serverNumber);
 
 		//DistLedger server services
-		final BindableService userImpl = new UserServiceImpl(serverState, debugFlag, type);
-		final BindableService adminImpl = new AdminServiceImpl(serverState, debugFlag, type);
+		final BindableService userImpl = new UserServiceImpl(serverState, debugFlag);
+		final BindableService adminImpl = new AdminServiceImpl(serverState, debugFlag, address);
 		final BindableService crossImpl = new DistLedgerCrossServerServiceImpl(serverState, debugFlag);
 
 		//Add the services to the server
@@ -118,18 +118,19 @@ public class ServerMain {
     }
 
 	//To register an entry on the naming server
-	public static void register(String service, String type, String address, NamingServerServiceGrpc.NamingServerServiceBlockingStub stub) {
+	public static Integer register(String service, String type, String address, NamingServerServiceGrpc.NamingServerServiceBlockingStub stub) {
 
         try {
 			//use the stub with the naming server to call the service register
             RegisterRequest registerRequest = RegisterRequest.newBuilder().setService(service).setType(type).setAddress(address).build();
             RegisterResponse registerResponse = stub.register(registerRequest);
 			running = true;
-
+			return registerResponse.getServerNumber();
         } catch (StatusRuntimeException e) {
 			running = false;
             System.out.println("Caught exception with description: " +
                     e.getStatus().getDescription());
+			return -1;
         }
     }
 
