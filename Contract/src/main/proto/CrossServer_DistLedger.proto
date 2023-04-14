@@ -16,6 +16,14 @@ message PropagateStateRequest {
 
 message PropagateStateResponse {}
 
+message GetFullStateRequest {}
+
+message GetFullStateResponse {
+  LedgerState state = 1;
+  repeated int32 replicaTS = 2;
+}
+
 service DistLedgerCrossServerService {
   rpc propagateState(PropagateStateRequest) returns (PropagateStateResponse);
+  rpc getFullState(GetFullStateRequest) returns (GetFullStateResponse);
 }

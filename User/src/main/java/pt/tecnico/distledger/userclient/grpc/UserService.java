@@ -173,7 +173,7 @@ public class UserService {
         final ManagedChannel channel = ManagedChannelBuilder.forTarget(lookup("DistLedger", server).get(0)).usePlaintext().build();
         try {
             UserServiceGrpc.UserServiceBlockingStub stub = UserServiceGrpc.newBlockingStub(channel);
-
+            
             TransferToRequest transferToRequest = TransferToRequest.newBuilder().setAccountFrom(from).setAccountTo(dest)
                     .setAmount(amount).addAllPrevTS(TS).build();
             TransferToResponse transferToResponse = stub.transferTo(transferToRequest);

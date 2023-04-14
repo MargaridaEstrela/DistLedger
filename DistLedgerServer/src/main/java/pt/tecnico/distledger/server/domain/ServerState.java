@@ -229,7 +229,6 @@ public class ServerState {
         for(Operation operation : this.getLedger()) {
             if(!operation.getStable()) {
                 answer.add(operation);
-                operation.stabilize();
             }
         }
         return answer;
