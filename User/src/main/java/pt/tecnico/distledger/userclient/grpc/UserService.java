@@ -58,7 +58,8 @@ public class UserService {
 
             channel.shutdownNow();
 
-            this.merge(createAccResponse.getTSList());
+            this.merge(new ArrayList<Integer>(createAccResponse.getTSList()));
+
             ResponseCode code = createAccResponse.getCode();
 
             // Debug messages
@@ -136,7 +137,7 @@ public class UserService {
 
             ResponseCode code = balanceResponse.getCode();
             if(code != ResponseCode.UNABLE_TO_DETERMINE) {
-                this.merge(balanceResponse.getValueTSList());
+                this.merge(new ArrayList<Integer>(balanceResponse.getValueTSList()));
             }
 
             int balance = balanceResponse.getValue();
@@ -180,7 +181,7 @@ public class UserService {
 
             channel.shutdownNow();
 
-            this.merge(transferToResponse.getTSList());
+            this.merge(new ArrayList<Integer>(transferToResponse.getTSList()));
             ResponseCode code = transferToResponse.getCode();
 
             if (code == ResponseCode.OK) {
@@ -233,7 +234,7 @@ public class UserService {
     }
 
     private void merge(List<Integer> ts) {
-        while (ts.size() < this.TS.size()) {
+        while (this.TS.size() > ts.size()) {
             ts.add(0);
         }
         while (ts.size() > this.TS.size()) {

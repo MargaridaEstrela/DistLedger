@@ -171,6 +171,7 @@ public class CommandParser {
             case 1 : return ResponseCode.NON_EXISTING_USER;
             case 2 : return ResponseCode.USER_ALREADY_EXISTS;
             case 3 : return ResponseCode.AMOUNT_NOT_SUPORTED;
+            case 4 : return ResponseCode.UNABLE_TO_DETERMINE;
         }
 
         return ResponseCode.UNRECOGNIZED;
