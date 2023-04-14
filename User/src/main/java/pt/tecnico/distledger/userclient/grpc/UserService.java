@@ -233,6 +233,10 @@ public class UserService {
 
     }
 
+    /*
+     * To addapt the size of the TS list, setting all the entries to zero
+     * and at the end update the TS list
+     */
     private void merge(List<Integer> ts) {
         while (this.TS.size() > ts.size()) {
             ts.add(0);
@@ -240,6 +244,7 @@ public class UserService {
         while (ts.size() > this.TS.size()) {
             this.TS.add(0);
         }
+
         for(int i = 0; i < ts.size(); i++) {
             if(this.TS.get(i) < ts.get(i)) {
                 this.TS.set(i,ts.get(i));

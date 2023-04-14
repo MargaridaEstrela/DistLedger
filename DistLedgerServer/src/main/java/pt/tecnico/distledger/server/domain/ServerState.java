@@ -36,30 +36,33 @@ public class ServerState {
         this.accounts.put("broker",broker);
     }
 
-    //inicialize TS
+    // Inicialize TS
     private void startTS() {
         for(int i = 0; i < this.getNum()+1; i++) {
             this.getValueTS().add(0);
         }
     }
 
+    // Activate the server
     public void activate () {
         setActivated(true);
     }
 
+    // Deactivate the server
     public void deactivate () {
         setActivated(false);
     }
 
-    //Setters:
+    // Setters:
     public void setActivated (boolean state) {
         this.activated = state;
     }
 
-    //Getters:
+    // Getters:
     public boolean getActivated () {
         return this.activated;
     }
+
 
     public List<Integer> getValueTS() {
         return this.valueTS;
@@ -93,6 +96,7 @@ public class ServerState {
         return this.unstables;
     }
 
+    // Verify if the operation can be executed
     private boolean canExecute (List<Integer> ts) {
         while (ts.size() < this.getValueTS().size()) {
             ts.add(0);
@@ -108,6 +112,7 @@ public class ServerState {
         return true;
     }
 
+    // Addapt the size of both lists and if the condition is verified, the operation is added to the list
     private void merge(List<Integer> ts1, List<Integer> ts2) {
         while (ts1.size() < ts2.size()) {
             ts1.add(0);
@@ -122,14 +127,17 @@ public class ServerState {
         }
     }
 
+    // Return true if the account with a certain Id is valid
     public boolean existsAccount (String Id) {
         return getAccount(Id) != null;
     }
 
+    // Return true if the account with a certain Id has more money than the amount required
     public boolean hasMoney (String Id, int amount) {
         return getMoneyAccount(Id) >= amount;
     }
 
+    // Return true if the account with a certain Id has money
     public boolean hasMoney (String Id) {
         return getMoneyAccount(Id) > 0;
     }
@@ -192,6 +200,7 @@ public class ServerState {
         }
     }
 
+    // Get the balance of the account given
     private List<Integer> getBalance(String accountID) {
         List<Integer> answer = new ArrayList<Integer>();
         if(!this.existsAccount(accountID)) {
@@ -203,18 +212,21 @@ public class ServerState {
         return answer;
     }
 
+    // Create a new account
     private void createAccount(CreateOp operation) {
         if(!this.existsAccount(operation.getAccount())) {
             this.getAccounts().put(operation.getAccount(),new Account(operation.getAccount(), 0));
         }
     }
 
+    // Delete the account given
     private void deleteAccount(DeleteOp operation) {
         if(this.existsAccount(operation.getAccount()) || !this.hasMoney(operation.getAccount())) {
             this.getAccounts().remove(operation.getAccount());
         }
     }
 
+    // Transfer function
     private void transferTo(TransferOp operation) {
         if(this.existsAccount(operation.getAccount()) && this.existsAccount(operation.getDestAccount()) 
         && this.hasMoney(operation.getAccount(), operation.getAmount()) && operation.getAmount() > 0) {
@@ -249,10 +261,12 @@ public class ServerState {
         }
     }
 
+    // Add an operation to the list of unstable operations
     private void mergeIntoLog(Operation operation) {
         this.getUnstables().getUpdateLog().add(operation);
     }
 
+    // Addapt the size of both lists and if the condition is not verified, return false
     private boolean smallerThan(List<Integer> ts1, List<Integer> ts2) {
         while (ts2.size() < ts1.size()) {
             ts2.add(0);

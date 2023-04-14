@@ -164,6 +164,7 @@ public class AdminService {
 
     }
 
+    // To gossip to all servers associated with a service and return a ResponseCode according to the success of the operation
     public ResponseCode gossip(String server) {
 
         try {
