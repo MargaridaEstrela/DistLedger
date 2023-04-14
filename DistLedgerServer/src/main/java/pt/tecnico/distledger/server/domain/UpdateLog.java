@@ -32,10 +32,9 @@ public class UpdateLog {
 
     public List<Integer> addToUpdateLog(Operation operation) {
         this.getReplicaTS().set(this.getReplicaNumber(),this.getReplicaTS().get(this.getReplicaNumber())+1);
-        List<Integer> ts = new ArrayList<Integer>(operation.getPrevTS());
         this.setOperationTS(operation, this.getReplicaNumber(), this.getReplicaTS().get(this.getReplicaNumber()));
         this.getUpdateLog().add(operation);
-        return ts;
+        return new ArrayList<Integer>(operation.getTS());
     }
 
     private void setOperationTS(Operation operation, Integer position, Integer value) {

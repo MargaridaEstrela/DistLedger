@@ -64,10 +64,7 @@ public class UserService {
             // Debug messages
             if (code == ResponseCode.OK) {
                 UserClientMain.debug("User " + username + " created an account");
-            } else if (code == ResponseCode.USER_ALREADY_EXISTS) {
-                UserClientMain.debug("User " + username + " already exists");
             }
-
             return code;
 
         } catch (StatusRuntimeException e) {
@@ -186,13 +183,8 @@ public class UserService {
             this.merge(transferToResponse.getTSList());
             ResponseCode code = transferToResponse.getCode();
 
-            // Debug messages
             if (code == ResponseCode.OK) {
-                UserClientMain.debug("User " + from + " transfered " + amount + " to user " + dest);
-            } else if (code == ResponseCode.USER_ALREADY_EXISTS) {
-                UserClientMain.debug("Something wrong with users");
-            } else if (code == ResponseCode.AMOUNT_NOT_SUPORTED) {
-                UserClientMain.debug("User " + from + " doesn't have enough amount");
+                UserClientMain.debug("Transfer From " + from + " to " + dest + " with value " + amount);
             }
 
             // Return an error code

@@ -219,6 +219,7 @@ public class AdminServiceImpl extends AdminServiceImplBase {
             for (String server : lookupResponse.getServersList()) {
                 res.add(server);
             }
+            channel.shutdown();
 
         } catch (StatusRuntimeException e) {
             // Debug message
